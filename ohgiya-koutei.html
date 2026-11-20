@@ -168,23 +168,34 @@ const monday=n=>n-((dow(n)+6)%7);
 // 歩掛り（1班1日あたりの施工量）。初期値は R5 土木工事標準積算基準書 第I編第14章②「市場単価の作業日当り標準作業量」。
 // 材料単価は48期完成台帳の実勢（台帳_品目単価）、見積単価は48期出来高DBの売単価中央値（材工共・税抜）。いずれも実績で上書きしていく前提。
 function sampleMaster(){
-  // [工種, 単位, 1班1日あたり, 材料単価(円/単位), 見積単価(円/単位), 出所]
-  const STD='標準（R5基準書 I-14-②）', LED='台帳', DK='出来高DB', TMP='仮置き';
+  // [工種, 単位, 1班1日あたり, 材料単価(円/単位), 見積単価(円/単位), 出所]  ※1班＝4人換算
+  const R5='R7基準書 Ⅰ-14-⑤', R4='R7基準書 Ⅰ-14-④', LED='台帳', DK='出来高DB', TMP='仮置き';
   const M=[
-   ['準備工','日',1,0,0,TMP],['伐採工','m2',300,0,0,TMP],['法面整形工','m2',150,0,1300,DK],
-   ['ラス張工','m2',140,380,650,STD],
-   ['モルタル吹付工 t=5〜7cm','m2',120,1500,4500,STD],['モルタル吹付工 t=8〜10cm','m2',100,2300,11000,STD],
-   ['コンクリート吹付工 t=10cm','m2',100,2600,8280,STD],
-   ['植生基材吹付工 t=3〜5cm','m2',140,1400,5600,STD],['植生基材吹付工 t=6〜8cm','m2',110,2000,6500,STD],
-   ['客土吹付工','m2',400,500,1500,STD],['種子散布工','m2',1100,80,150,STD],
-   ['植生マット工','m2',200,1500,2800,STD],['植生シート工','m2',250,700,1290,STD],['張芝工','m2',300,800,1200,STD],
-   ['多機能フィルター','m2',250,1800,2350,DK],
-   ['吹付法枠工 F200','m',77,2500,16000,STD],['吹付法枠工 F300','m',51,3800,11000,STD],['吹付法枠工 F400','m',30,5500,10200,STD],
-   ['簡易吹付法枠工','m2',150,5000,17000,DK],
-   ['鉄筋挿入工 L≦2m','本',14,7500,30000,STD],['鉄筋挿入工 L=2〜5m','本',7,9000,48000,STD],
-   ['グラウンドアンカー工','本',2,80000,220000,DK],['落石防護網工','m2',40,2500,6000,TMP],['落石防護柵工','m',15,40000,80000,TMP],
-   ['足場工','空m3',40,0,6528,STD],['地盤改良工（表層）','m2',300,1500,3000,TMP],['地盤改良工（柱状）','本',20,8000,15000,TMP],
-   ['擁壁工','m',5,20000,60000,TMP],['護岸工','m2',30,5000,12000,TMP],['外構工','日',1,30000,80000,TMP],['舗装工','m2',300,2000,4000,TMP],['片付け','日',1,0,0,TMP]];
+   ['準備工','日',1,0,0,TMP],
+   ['伐採工','m2',768,0,0,R4+'-76 伐木(人力・中)'],
+   ['法面整形工','m2',140,0,1300,R4+'-19 切土・レキ質土'],
+   ['吹付法面とりこわし工','m2',54,0,0,R4+'-20 人力'],
+   ['ラス張工','m2',140,380,650,R5+'-14 表10.2'],
+   ['モルタル吹付工 t=5〜7cm','m2',120,1500,4500,R5+'-13 表9.1'],['モルタル吹付工 t=8〜10cm','m2',100,2300,11000,R5+'-13 表9.1'],
+   ['コンクリート吹付工 t=10cm','m2',100,2600,8280,R5+'-13 表9.2'],['コンクリート吹付工 t=15cm','m2',60,3900,0,R5+'-13 表9.2'],
+   ['植生基材吹付工 t=3〜5cm','m2',140,1400,5600,R5+'-13 表9.3'],['植生基材吹付工 t=6〜8cm','m2',110,2000,6500,R5+'-13 表9.3'],['植生基材吹付工 t=10cm','m2',100,2800,0,R5+'-13 表9.3'],
+   ['客土吹付工','m2',400,500,1500,R5+'-13 表9.3'],['種子散布工','m2',1100,80,150,R5+'-13 表9.3'],
+   ['植生マット工','m2',200,1500,2800,R5+'-13 表9.4'],['植生シート工','m2',250,700,1290,R5+'-13 表9.4'],['張芝工','m2',300,800,1200,R5+'-13 表9.4'],
+   ['繊維ネット工','m2',250,600,0,R5+'-13 表9.5'],['多機能フィルター','m2',250,1800,2350,DK+'（日当りは繊維ネット準用）'],
+   ['吹付法枠工 F150','m',98,1800,0,R5+'-14 表10.1'],['吹付法枠工 F200','m',77,2500,16000,R5+'-14 表10.1'],['吹付法枠工 F300','m',51,3800,11000,R5+'-14 表10.1'],['吹付法枠工 F400','m',30,5500,10200,R5+'-14 表10.1'],['吹付法枠工 F500','m',26,7500,0,R5+'-14 表10.1'],
+   ['簡易吹付法枠工','m2',19,7600,17000,'ATLUS蘇原飛鳥町 代価表（治山林道必携）10.06人工/47㎡'],
+   ['鉄筋挿入工 L≦2m','本',14,7500,30000,R5+'-29 表21.1 条件Ⅰ'],['鉄筋挿入工 L=2〜5m','本',7,9000,48000,R5+'-29 表21.1 条件Ⅰ'],
+   ['鉄筋挿入工 L≦2m（条件Ⅱ 狭隘）','本',8,7500,0,R5+'-29 表21.1 条件Ⅱ'],['鉄筋挿入工 L=2〜5m（条件Ⅱ 狭隘）','本',4,9000,0,R5+'-29 表21.1 条件Ⅱ'],
+   ['グラウンドアンカー工','本',3,80000,220000,R4+'-36 鋼材組立〜頭部処理 3.1本/日'],
+   ['落石防護網工（金網・ロープ設置）','m2',130,2500,6000,R5+'-11 表8.1 線径2.6mm'],['落石防護網 アンカー設置（岩盤用）','箇所',15,9000,0,R5+'-11 表8.2'],
+   ['落石防護柵工','m',15,40000,80000,R5+'-10 表7.1 柵高2.0m'],
+   ['ワイヤネット工（ロープ伏工）','m2',7,20200,41800,'扇屋49-014 代価表 58.1人/100㎡（基準書は市場単価適用外）'],
+   ['DKドレーンパイプ工 L=2.0m','本',7.5,13600,65000,'扇屋49-014 代価表 0.53人/本（据付撤去8人工/回は別途）'],
+   ['石積工（練積）','m2',19,15000,0,R4+'-23 積工・練石'],['コンクリートブロック積工','m2',13,12000,0,R4+'-21 間知ブロック積'],
+   ['足場工','空m3',40,0,6528,R5+'-29 表21.1 仮設足場'],
+   ['地盤改良工（表層）','m2',170,1500,3000,R4+'-18 安定処理(バックホウ)'],['地盤改良工（柱状）','本',20,8000,15000,TMP],
+   ['擁壁工','m3',6.3,20000,60000,R4+'-24 重力式2〜5m'],['護岸工','m2',13,5000,12000,R4+'-21 間知ブロック積 準用'],
+   ['外構工','日',1,30000,80000,TMP],['舗装工','m2',300,2000,4000,TMP+'（道路編 3-3 参照）'],['片付け','日',1,0,0,TMP]];
   return M.map(([kind,unit,rate,matUnit,price,src])=>({kind,unit,rate,crewDay:120000,matUnit,price,src,actuals:[]}));
 }
 // 班×工種ランク（松竹梅）と現場難易度（ABC）の相性表。歩掛係数kは日進量に掛ける（0.8なら2割遅い）
@@ -271,6 +282,13 @@ function migrate(){
   // 旧版（v2）の工種名を新しい名前に寄せる
   const ren={'モルタル吹付工':'モルタル吹付工 t=5〜7cm','植生基材吹付工':'植生基材吹付工 t=3〜5cm','法枠工':'吹付法枠工 F300','鉄筋挿入工':'鉄筋挿入工 L=2〜5m'};
   S.bugakari.forEach(b=>{if(ren[b.kind]&&!S.bugakari.some(x=>x.kind===ren[b.kind])) b.kind=ren[b.kind]});
+  if(!S.r7Applied){
+    const ren2={'落石防護網工':'落石防護網工（金網・ロープ設置）'};
+    S.bugakari.forEach(b=>{if(ren2[b.kind]&&!S.bugakari.some(x=>x.kind===ren2[b.kind])){S.jobs.forEach(j=>j.tasks.forEach(t=>{if(t.kind===b.kind)t.kind=ren2[b.kind]}));b.kind=ren2[b.kind]}});
+    S.bugakari.forEach(b=>{const x=d.find(y=>y.kind===b.kind); if(!x) return;
+      if(/^(標準（R5|仮置き|出来高DB)/.test(b.src||'')||b.kind==='簡易吹付法枠工'){b.rate=x.rate;b.unit=x.unit;b.src=x.src;}});
+    S.r7Applied=true;
+  }
   d.forEach(x=>{if(!S.bugakari.some(b=>b.kind===x.kind)) S.bugakari.push(x)});
   if(!S.samplesCleared){S.jobs=S.jobs.filter(j=>!(j.sample||/（見本）$/.test(j.name||''))); S.samplesCleared=true;}
   S.jobs.forEach(j=>{if(j.no===undefined) j.no=''; if(!j.tags) j.tags=[]; if(!j.extra) j.extra=[]; if(!j.diff) j.diff='B'; if(!j.dist) j.dist='B'; if(j.due===undefined) j.due=''; if(!j.addr) j.addr='';
@@ -431,7 +449,7 @@ function renderMaster(){
   const showAll=V.mstAll||!cj||!cj.tasks.length;
   $('main').innerHTML=`<div class="mst wide">
     <div class="bar">${cj?`<strong style="font-size:16px">${esc(jl(cj))}</strong>`:''}<span class="u">${showAll?'全工種を表示中':'この案件の工種だけ表示中'}</span><label class="chk" style="margin-left:8px"><input type="checkbox" id="mAll"${V.mstAll?' checked':''}>全工種（マスタ全体）を表示</label></div>
-    <p class="note">歩掛りは1班1日の施工量。初期値は国交省の標準積算基準書（R5・市場単価の作業日当り標準作業量）で、実績を記録すると中央値が採用値になり、工程と実行予算の両方に効きます。班ランク×難易度の係数（配置ルール）は採用値に掛かります。班日単価は人件費・車両・自社機械を1班1日にまとめた額（仮置き12万円）、材料単価は数量1単位あたりの材料費（48期台帳の実勢）、見積単価は発注者向けの材工共単価（48期出来高の中央値）です。</p>
+    <p class="note">歩掛りは1班1日の施工量。初期値は国交省 令和7年度 土木工事標準積算基準書（共通編）の「市場単価の1日当り標準施工量」(Ⅰ-14-⑤)と「作業日当り標準作業量」(Ⅰ-14-④)。基準書に無い工種（ワイヤネット・DKドレーン・簡易法枠）は扇屋とATLUSの代価表から人工を拾って1班4人で割った値で、実績を記録すると中央値が採用値になり、工程と実行予算の両方に効きます。班ランク×難易度の係数（配置ルール）は採用値に掛かります。班日単価は人件費・車両・自社機械を1班1日にまとめた額（仮置き12万円）、材料単価は数量1単位あたりの材料費（48期台帳の実勢）、見積単価は発注者向けの材工共単価（48期出来高の中央値）です。</p>
     <div class="ttw"><table class="tt" style="min-width:1100px"><thead><tr><th>工種</th><th>単位</th><th>歩掛り（マスタ）</th><th>採用値（実績）</th><th>官 日当り（この工事・ATLUS）</th><th>班日単価(円)</th><th>材料単価(円/単位)</th><th>見積単価(円/単位)</th><th>出所</th><th>使用</th><th></th></tr></thead><tbody>
     ${S.bugakari.map((b,i)=>({b,i,inJob:!!(cj&&cj.tasks.some(t=>t.kind===b.kind))})).filter(x=>showAll||x.inJob).sort((a,c)=>(c.inJob-a.inJob)).map(({b,i,inJob})=>{const st=stats(b,cj?cj.tags:[]);const kd=kanOf(b.kind);return `<tr data-i="${i}"${inJob&&showAll?' style="background:#fff8e1"':''}><td><input type="text" class="mk" value="${esc(b.kind)}" aria-label="工種"></td>
       <td><input type="text" class="mu" value="${esc(b.unit)}" aria-label="単位"></td>
@@ -559,7 +577,7 @@ function renderDesign(){
   const used=j.tasks.filter(t=>!bk(t.kind)).length;
   const rows=j.tasks.map((t,k)=>`<tr data-k="${k}"><td><input type="text" class="k" list="kinds" value="${esc(t.kind)}" style="width:260px" aria-label="工種">${bk(t.kind)?'':' <span class="warn">歩掛未登録</span>'}</td>
     <td class="num"><input type="number" step="any" min="0" class="q" value="${esc(t.qty??'')}" style="width:100px;text-align:right" aria-label="数量"></td><td class="u">${esc(bk(t.kind)?.unit||'')}</td>
-    <td class="u">${t.src?.rows?.length?esc(t.src.rows.map(r=>r.name).join('／')).slice(0,80):''}</td>
+    <td class="u">${t.src?.rows?.length?esc(t.src.rows.map(r=>r.name).join('／')).slice(0,80):''}${t.src?.qtyNote?`<span style="display:block">数量：${esc(t.src.qtyNote)}</span>`:''}</td>
     <td><button type="button" class="x" data-del="${k}" aria-label="削除">×</button></td></tr>`).join('');
   const extra=(j.extra||[]).map(e=>`<tr><td>${esc(e.name)} <span class="warn">自社工種に未対応</span></td><td class="num">${e.qty?fmt(e.qty):''}</td><td class="u">${esc(e.unit||'')}</td><td class="u">${e.amount?'官 '+yen(e.amount)+'円':''}</td><td></td></tr>`).join('');
   $('main').innerHTML=`<div class="mst wide">${head}
@@ -680,8 +698,8 @@ const KW=[[/簡易.*法枠|簡易法枠/,'簡易吹付法枠工'],[/法枠.*(F|�
   [/植生基材.*(6|7|8)\s*cm|植生基材.*t\s*=\s*(6|7|8)/,'植生基材吹付工 t=6〜8cm'],[/植生基材|厚層基材/,'植生基材吹付工 t=3〜5cm'],[/モルタル吹付.*(8|9|10)\s*cm|ﾓﾙﾀﾙ吹付.*(8|9|10)/,'モルタル吹付工 t=8〜10cm'],[/モルタル吹付|ﾓﾙﾀﾙ吹付/,'モルタル吹付工 t=5〜7cm'],
   [/コンクリート吹付|ｺﾝｸﾘｰﾄ吹付/,'コンクリート吹付工 t=10cm'],[/客土吹付/,'客土吹付工'],[/種子散布/,'種子散布工'],[/植生マット|植生ﾏｯﾄ/,'植生マット工'],[/植生シート|植生ｼｰﾄ/,'植生シート工'],[/張芝/,'張芝工'],[/ラス|ﾗｽ|金網張/,'ラス張工'],
   [/鉄筋挿入.*(L|ﾙ)?\s*=?\s*[1]\.?\d*\s*m|鉄筋挿入.*2\.0\s*m/,'鉄筋挿入工 L≦2m'],[/鉄筋挿入|ロックボルト|ﾛｯｷﾞﾎﾞﾙﾄ/,'鉄筋挿入工 L=2〜5m'],[/グラウンドアンカー|ｸﾞﾞﾗｳﾝﾄﾞｱﾝｶｰ/,'グラウンドアンカー工'],
-  [/落石防護網|ﾛｯｷﾈｯﾄ|防護網/,'落石防護網工'],[/落石防護柵|防護柵/,'落石防護柵工'],[/足場/,'足場工'],[/法面整形|整形工/,'法面整形工'],[/伐採|除根/,'伐採工'],[/準備工/,'準備工'],[/後片付|片付/,'片付け'],[/舗装/,'舗装工'],[/擁壁/,'擁壁工'],[/護岸/,'護岸工']];
-function guessKind(name){const n=String(name||'');for(const [re,k] of KW){if(re.test(n)&&bk(k))return k}return ''}
+  [/ワイヤネット|ﾜｲﾔﾈｯﾄ|ロープ伏/,'ワイヤネット工（ロープ伏工）'],[/DKドレーン|ＤＫドレーン|ドレーンパイプ/,'DKドレーンパイプ工 L=2.0m'],[/石積/,'石積工（練積）'],[/落石防護網|落石防止網|ロックネット|ﾛｯｸﾈｯﾄ|防護網/,'落石防護網工（金網・ロープ設置）'],[/落石防護柵|防護柵/,'落石防護柵工'],[/足場/,'足場工'],[/法面整形|整形工/,'法面整形工'],[/伐採|除根/,'伐採工'],[/^準備工/,'準備工'],[/^後片付|^片付/,'片付け'],[/^舗装/,'舗装工'],[/^擁壁/,'擁壁工'],[/^護岸/,'護岸工'],[/^外構/,'外構工']];
+function guessKind(name){const n=String(name||'').replace(/^[\s　]+/,''); if(/^(材料費|施工費|労務費|運搬|資材運賃|諸雑費|経費)/.test(n)) return ''; for(const [re,k] of KW){if(re.test(n)&&bk(k))return k}return ''}
 // 代価表を再帰的に解いて「基準数量あたりの人工」を出す（人件費＝単位が「人」の行。下位の単価表を参照する行はその単価表を解く）
 function ninkuOf(A,blk,depth=0){
   if(!blk||depth>6) return 0;
@@ -713,7 +731,8 @@ function valueRow(r){ // 数量・単位・(単価)・金額 の並びを探す�
     const nums=c.slice(i+2).filter(isNum);
     const amt=nums[nums.length-1], price=nums.length>=2?nums[0]:null;
     const note=c.slice(i+2).filter(v=>typeof v==='string').map(txt).join(' ');
-    return {qty:c[i],unit:u,price,amt,note};
+    const lead=c.slice(0,i).map(txt).filter(v=>v&&!/^\d+$/.test(v));
+    return {qty:c[i],unit:u,price,amt,note,lead};
   }
   return null;
 }
@@ -725,12 +744,21 @@ function parseAtlasPrint(wb){
   // 表紙
   const cov=A('表紙'); if(cov){cov.forEach(r=>{const t=textsOf(r);for(let i=0;i<t.length-1;i++){
     if(/^工\s*事\s*名/.test(t[i])&&!out.meta.name) out.meta.name=t[i+1];
-    if(/^施工箇所|工事場所/.test(t[i])&&!out.meta.place) out.meta.place=t[i+1];}});}
+    if(/^施工箇所|工事場所/.test(t[i])&&!out.meta.place) out.meta.place=t[i+1];
+    if(/^(管理|工事|案件)\s*番号/.test(t[i])&&!out.meta.no&&/^\d{2}-\d{3}$/.test(t[i+1]||'')) out.meta.no=t[i+1];}});}
   // 本工事費表
-  const hon=A('本工事費'); if(hon){let pend=[];
-    hon.forEach((r,ri)=>{const v=valueRow(r);
-      if(!v){const t=textsOf(r).filter(x=>!/本工事費|株式会社|^\d+$/.test(x)); if(t.length) pend.push(...t); return}
-      const name=pend.join(' ').trim(); pend=[];
+  const hon=A('本工事費'); if(hon){let pend=[],grp='',started=false,stop=false; const isGrp=x=>/工$|工（|工\s|工\u3000/.test(x);
+    hon.forEach((r,ri)=>{const raw=r.map(txt).join(' ');
+      if(/名\s*称/.test(raw)&&/数\s*量/.test(raw)){started=true;pend=[];grp='';return}
+      if(!started||stop) return;
+      const v=valueRow(r);
+      if(!v){const t=textsOf(r); if(t.some(x=>/直接工事費\s*計|直接工事費計/.test(x))){stop=true;return}
+        t.filter(x=>!/本工事費|株式会社|^\d+$|^内訳|^うち/.test(x)).forEach(x=>{if(isGrp(x)){grp=x;pend=[]}else pend.push(x)}); return}
+      if(/[％%]/.test(v.unit)) return;
+      const lead=(v.lead||[]).filter(x=>!/^(内訳|うち)/.test(x));
+      // 名称＝（工種見出し）＋（直前の文字行）＋（同じ行の文字）。ATLUS様式は見出し行と値行が分かれ、扇屋書式は同じ行に名称がある。
+      const parts=[...pend,...lead]; const name=(grp&&!(parts.length&&isGrp(parts[0]))?[grp,...parts]:parts).join(' ').trim(); pend=[];
+      if(!name) return;
       if(v.unit==='式'&&!v.price) return; // 階層・計の行
       if(/直接工事費|工事費計|合計/.test(name)) return;
       out.items.push({row:ri+1,name,qty:v.qty,unit:v.unit,price:v.price,amount:v.amt,ref:v.note});});}
@@ -742,8 +770,18 @@ function parseAtlasPrint(wb){
       if(out._lastKey&&!cur.length&&!pend.length){const n=r.find(isNum); if(isNum(n)&&!valueRow(r)){out.totals[out._lastKey]=n; out._lastKey=null; return}}
       const v=valueRow(r);
       if(!v){const tt=t.filter(x=>!/集\s*計\s*表|株式会社|^\d+$/.test(x)); if(tt.length) pend=tt; return}
-      cur.push({name:pend[0]||'',spec:pend.slice(1).join(' '),qty:v.qty,unit:v.unit,price:v.price,amt:v.amt,note:v.note}); pend=[];});}
+      const L=v.lead||[]; cur.push({name:pend[0]||L[0]||'',spec:(pend.length?pend.slice(1):L.slice(1)).join(' '),qty:v.qty,unit:v.unit,price:v.price,amt:v.amt,note:v.note}); pend=[];});}
   delete out._lastKey;
+  // 設計数量（工区別数量表）：区分・名称・規格・単位・数量
+  out.design=[]; if(su){let on=false;
+    su.forEach(r=>{const t=textsOf(r);
+      if(t.some(x=>/設計数量|工区別数量表/.test(x))){on=true;return}
+      if(!on) return;
+      if(t.some(x=>/集計リスト|合計$/.test(x))){on=false;return}
+      const c=r.filter(v=>v!==''&&v!=null); const i=c.findIndex(isNum); if(i<1) return;
+      const unit=txt(c[i-1]); if(!unit||unit.length>6) return;
+      const lead=c.slice(0,i-1).map(txt).filter(Boolean); if(!lead.length) return;
+      out.design.push({group:lead[0],name:lead.slice(1).join(' '),unit,qty:c[i],note:c.slice(i+1).map(txt).join(' ')});});}
   Object.keys(out.lmk).forEach(k=>{if(out.totals[k]==null) out.totals[k]=out.lmk[k].reduce((a,x)=>a+(x.amt||0),0)});
   // 代価表：ブロック単位（名称・基準数量・内訳）
   const dk=A('代価表'); if(dk){let blk=null,pend=[];
@@ -756,7 +794,7 @@ function parseAtlasPrint(wb){
       if(t.some(x=>/^合計/.test(x))){const n=r.filter(isNum).pop(); blk.total=n; return}
       if(t.some(x=>/当り$/.test(x))){const n=r.filter(isNum).pop(); blk.unitPrice=n; return}
       if(!v){const tt=t.filter(x=>!/株式会社|^\d+$|単価表$|運転単価表$/.test(x)); if(tt.length) pend.push(...tt); return}
-      blk.items.push({name:pend.join(' '),qty:v.qty,unit:v.unit,price:v.price,amt:v.amt,note:v.note}); pend=[];});
+      blk.items.push({name:(pend.length?pend:(v.lead||[])).join(' '),qty:v.qty,unit:v.unit,price:v.price,amt:v.amt,note:v.note}); pend=[];});
     if(blk) out.daika.push(blk);}
   return out;
 }
@@ -828,9 +866,17 @@ function doImport(status){
   const oldCrew={}; if(j) j.tasks.forEach(t=>oldCrew[t.kind]=t.crew);
   if(!j){j={id:uid(),no:nextNo(),name:IMP.newName||'取込案件',client:'',place:'',status,sup:'',color:S.jobs.length%COLORS.length,tags:[],extra:[],tasks:[],diff:'B',dist:'B',due:'',addr:''};S.jobs.push(j)}
   // 取込順は自社マスタの並び（準備→本体→片付け）に合わせる
-  j.tasks=S.bugakari.filter(b=>by[b.kind]).map(b=>{const o=by[b.kind];
-    const nk=IMP.atlas?ninkuForRows(IMP.atlas,o.rows):0; return {id:uid(),kind:b.kind,qty:Math.round(o.qty*100)/100,start:IMP.start,end:IMP.start,crew:oldCrew[b.kind]||'',price:'',src:{amount:o.amount,daily:o.daily,days:o.days,rows:o.rows,ninku:nk?Math.round(nk*100)/100:0}}});
-  j.extra=extra; if(IMP.atlas){j.atlas=IMP.atlas; if(!j.place&&IMP.atlas.meta.place) j.place=IMP.atlas.meta.place;} packJob(j);
+  const nu=u=>String(u||'').replace('㎡','m2').replace('㎥','m3').replace('ｍ','m').toLowerCase();
+  const resolveQty=(b,o)=>{ // 「1式」で取り込まれた行に設計数量を当てる
+    if(!o.rows.every(r=>/式/.test(r.unit))) return o.qty;
+    const dz=(IMP.atlas?.design||[]).find(d=>nu(d.unit)===nu(b.unit)&&guessKind(d.group+' '+d.name)===b.kind);
+    if(dz) {o.qtyNote='設計数量表 '+dz.group+' '+dz.name; return dz.qty}
+    for(const r of o.rows){for(const m of String(r.name).matchAll(/([\d,.]+)\s*(m2|㎡|m3|㎥|本|箇所|m)(?![a-z])/gi)){if(nu(m[2])===nu(b.unit)){o.qtyNote='名称から '+m[0]; return parseFloat(m[1].replace(/,/g,''))}}}
+    return null;};
+  j.tasks=S.bugakari.filter(b=>by[b.kind]).map(b=>{const o=by[b.kind]; const q=resolveQty(b,o);
+    if(q==null){extra.push({name:b.kind+'（'+o.rows.map(r=>r.name).join('／').slice(0,40)+'）数量不明・1式',qty:1,unit:'式',amount:o.amount,est:o.amount||undefined}); return null}
+    const nk=IMP.atlas?ninkuForRows(IMP.atlas,o.rows):0; return {id:uid(),kind:b.kind,qty:Math.round(q*100)/100,start:IMP.start,end:IMP.start,crew:oldCrew[b.kind]||'',price:'',src:{amount:o.amount,daily:o.daily,days:o.days,rows:o.rows,ninku:nk?Math.round(nk*100)/100:0,qtyNote:o.qtyNote||''}}}).filter(Boolean);
+  j.extra=extra; if(IMP.atlas){j.atlas=IMP.atlas; if(!j.place&&IMP.atlas.meta.place) j.place=IMP.atlas.meta.place; if(!j.no&&IMP.atlas.meta.no) j.no=IMP.atlas.meta.no;} packJob(j);
   return j.id;
 }
 window.__dbg=()=>({IMP,S,sampleJobs});window.__ohgiyaImport=(aoa,map)=>{IMP={aoa,rows:null,start:toS(nextWork(today()+7)),jobId:'',newName:'テスト取込'};const g=guess(aoa);IMP.hdr=g.hdr;IMP.cols=g.cols;IMP.rows=impRows();Object.assign(S.taiou,map||{});return doImport('見込み')};
