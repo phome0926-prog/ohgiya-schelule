@@ -266,12 +266,13 @@ function sampleJobs(){
 
 const APP_VER='v3.9';
 const SUPS0=['田中耕平','平野喜太穂','原昌浩','佐藤恒夫','丸山誠司'], HAN0=['太田裕介','吉田勝広','河野豊','渡辺旭','吉田雪也','境忠昌'];
-// 実行予定予算の経費（扇屋の見積書 49-014 の組み方）：法定福利費＝労務費×16%、建退共＝延べ人数×320円×加入率、諸経費＝直接工事費×10%、安全衛生経費＝労務費×10%
-const BUD0={houtei:0.16,kentai:320,kentaiRate:1,sho:0.10,anzen:0.10,arari:0.35};
+// 実行予定予算の経費（扇屋の見積書 49-014 の組み方）：法定福利費＝労務費×16%、建退共＝延べ人数×320円×加入率80%、諸経費＝直接工事費×10%、安全衛生経費＝労務費×10%
+const BUD0={houtei:0.16,kentai:320,kentaiRate:0.8,sho:0.10,anzen:0.10,arari:0.35};
 const pf=v=>parseFloat(v)||0;
+const tl=t=>t.kind+(t.spec?'　'+t.spec:''); // 工種＋名称・規格
 // 更新履歴（① 設計書の下に出す）。新しい版を上に足す
 const HISTORY=[
- ['v3.9','2026-11-20',['監督を実名に（田中耕平・平野喜太穂・原昌浩・佐藤恒夫・丸山誠司）','施工班を追加（太田裕介・吉田勝広・河野豊・渡辺旭・吉田雪也・境忠昌）。① 設計書で工種ごとに選べ、同じ班が同じ日に2現場へ入ると警告','歩掛りを2段階に：ATLUSの人工がある工種はATLUS、無い工種は標準積算。ATLUSにしかない工種は名称のまま工種として取り込める','③ と ④ を入れ替え：③ 実行予算 → ④ 見積。実行予算は見積の前に積み上げる「実行予定予算」','実行予算に経費と粗利：法定福利費（見積書の労務費×16%）、建退共（延べ人数×320円）、諸経費（直接工事費×％・調整しろ）、安全衛生経費（見積書の労務費×10%）、粗利（％で入力。初期値35%）','実行予算に「設計書にない項目」（直人・材料費・機械費）と、入れ忘れ確認の警告','④ 見積の既定を「実行予算から積み上げ」に：直接工事費・現場管理費・諸経費は ③ と同じ数字で、万円未満の切捨ては最後だけ（見積単価×数量、取込元どおり も選べる）','ATLUS NEXT（と扇屋書式の見積書）の取込画面から、変えない項目（見出し行・列の指定・プレビュー・コード・日進量）を外した','このページの下に更新履歴']],
+ ['v3.9','2026-11-20',['監督を実名に（田中耕平・平野喜太穂・原昌浩・佐藤恒夫・丸山誠司）','施工班を追加（太田裕介・吉田勝広・河野豊・渡辺旭・吉田雪也・境忠昌）。① 設計書で工種ごとに選べ、同じ班が同じ日に2現場へ入ると警告','歩掛りを2段階に：ATLUSの人工がある工種はATLUS、無い工種は標準積算。ATLUSを取り込むと、工種の下に名称・規格を1行ずつ持つ（同じ工種でも規格が違えば別の行）。歩掛りは行ごとのATLUSの人工で、計画工程の帯も名称・規格ごとに出る','③ と ④ を入れ替え：③ 実行予算 → ④ 見積。実行予算は見積の前に積み上げる「実行予定予算」','実行予算に経費と粗利：法定福利費（見積書の労務費×16%）、建退共（延べ人数×320円×加入率80%）、諸経費（直接工事費×％・調整しろ）、安全衛生経費（見積書の労務費×10%）、粗利（％で入力。初期値35%）','実行予算に「設計書にない項目」（直人・材料費・機械費）と、入れ忘れ確認の警告','④ 見積の画面を扇屋の見積書（49-014）の「本工事費表」と同じ並びに（名称・規格／数量／単位／単価／金額／備考、うち材料費・うち労務費、現場管理費、諸経費、端数調整、工事金額、消費税相当額、合計）','④ 見積は常に ③ 実行予算と同じ数字（直接工事費・現場管理費・諸経費・端数調整・工事金額）。万円未満の切捨ては最後に1回だけ。取り込んだ見積書の金額は参考として表示','ATLUS NEXT（と扇屋書式の見積書）の取込画面から、変えない項目（見出し行・列の指定・プレビュー・コード・日進量）を外した','「データ・設定」に、案件を選んで消す機能（複数まとめて可）','このページの下に更新履歴']],
  ['v3.8 まで','〜2026-11-20',['施工班の固定をやめ、監督5人が現場ごとに人数を付ける体制に','日数は歩掛×人数だけで決まるように（難易度・監督による係数を廃止）','土曜を稼働日に（休みは日曜のみ）、案件に着手予定を追加','出面の読み込み（スプレッドシート／Excel）と、出面から実績を入れる機能','画面を 設計書→歩掛り→見積→実行予算→計画工程→実施工程 の流れ順に','Excel出力（扇屋書式の見積書・実行予算書・工程表）と一式全部出力（zip）']]
 ];
 function historyHtml(){return `<div style="margin-top:22px;border-top:1px solid var(--line);padding-top:10px"><h3 style="margin:0 0 4px">更新履歴</h3>${HISTORY.map(([v,d,items],i)=>`<details${i===0?' open':''} style="margin:4px 0"><summary><strong>${esc(v)}</strong>　<span class="u">${esc(d)}</span></summary><ul style="margin:4px 0 8px;padding-left:22px;font-size:13px">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('')}</div>`}
@@ -361,7 +362,9 @@ function migrate(){
     if(!S.han||!S.han.length) S.han=HAN0.slice();
     S.v39=true;
   }
+  if(!S.atlasKind39){S.taiou={}; S.atlasKind39=true;} // 工種をATLUSの名称で拾う方式に変えたので、覚えていた対応表を一度だけ空にする
   if(!S.han) S.han=[]; S.bud=Object.assign({},BUD0,S.bud||{});
+  S.jobs.forEach(j=>j.tasks.forEach(t=>{if(t.spec===undefined) t.spec=''}));
   S.jobs.forEach(j=>{if(!j.opt) j.opt=[]; if(!j.optNo) j.optNo=[]; if(j.arariR===undefined) j.arariR=''; j.tasks.forEach(t=>{if(t.han===undefined) t.han=''})});
   S.crews=S.sups; if(!S.staff) S.staff=20; if(!S.manDay) S.manDay=28000; if(!S.supCap) S.supCap=2; S.crewCap=99;
   const d2=sampleMaster();
@@ -403,7 +406,7 @@ function buildRows(jobs){
     j.tasks.forEach(t=>{ if(!t.start||!t.end) return;
       const r=rows.find(r=>r.kind==='sup'&&r.name===(t.crew||j.sup))||none;
       const m=menOf(t), s0=toN(t.start), e0=toN(t.end);
-      r.items.push({job:j,task:t,s:s0,e:e0,men:m,label:`${t.kind}｜${j.name}（${m}人${t.han?'・'+t.han:''}）`});
+      r.items.push({job:j,task:t,s:s0,e:e0,men:m,label:`${tl(t)}｜${j.name}（${m}人${t.han?'・'+t.han:''}）`});
       for(let n=s0;n<=e0;n++){ if(isHol(n)) continue; staff.men[n]=(staff.men[n]||0)+m; }
     });
   });
@@ -499,7 +502,7 @@ function renderJobs(){
   <p class="note">工事番号は「期-連番」（例 49-014）。空欄なら次の番号を提案します。完了にした案件は工程・配置から外れ、ここの「完了」に残ります。</p>`;
   if(!js.length){$('main').innerHTML=`<div class="mst wide">${bar}<p class="empty">${F}の案件はありません。</p></div>`;bind();return}
   $('main').innerHTML=`<div class="mst wide">${bar}
-    <div class="ttw"><table class="tt" style="min-width:1000px"><thead><tr><th>番号</th><th>工事名</th><th>発注者／場所</th><th>状態</th><th>監督</th><th>着手予定</th><th>工程</th><th>納期</th><th class="num">見積</th><th class="num">実行予算</th><th class="num">粗利</th><th></th></tr></thead><tbody>
+    <div class="ttw"><table class="tt" style="min-width:1000px"><thead><tr><th>番号</th><th>工事名</th><th>発注者／場所</th><th>状態</th><th>監督</th><th>着手予定</th><th>工程</th><th>納期</th><th class="num">見積＝実行予定予算</th><th class="num">原価（直接工事費）</th><th class="num">差</th><th></th></tr></thead><tbody>
     ${js.map(j=>{const sp=span(j),T=estTotals(j);return `<tr style="border-left:4px solid ${jc(j)}">
       <td><input type="text" value="${esc(j.no||'')}" data-no="${j.id}" placeholder="${esc(nextNo()||'49-001')}" style="width:80px" aria-label="工事番号"></td>
       <td><a href="#" data-open="${j.id}"><strong>${esc(j.name)}</strong></a>${j.atlas?' <span class="u">ATLUS</span>':''}<span class="u" style="display:block">${j.tasks.length}工種${j.extra?.length?'＋未対応'+j.extra.length:''}</span></td>
@@ -622,11 +625,11 @@ function budTotals(j,rows){
   const laborS=sell(labor), matS=sell(mat);
   const houtei=Math.floor(laborS*P.houtei), kentai=Math.floor(manDays*P.kentai*P.kentaiRate), genba=houtei+kentai;
   const shoR=(j.sho!==undefined&&j.sho!==null&&j.sho!=='')?pf(j.sho):P.sho, sho=Math.round(directS*shoR), anzen=Math.floor(laborS*P.anzen);
-  const genka=direct, total=directS+genba+sho;
-  return {rows,labor,laborS,matS,manDays,mach,mat,exCost,optTotal:oMen*md0+oMat+oMach,direct,arariR,rowSell,optSell,exSell,directS,arari,houtei,kentai,genba,shoR,sho,anzen,genka,total};
+  const genka=direct, total=directS+genba+sho, kouji=Math.floor(total/10000)*10000, hasu=kouji-total; // 最後に万円未満切捨
+  return {rows,labor,laborS,matS,manDays,mach,mat,exCost,optTotal:oMen*md0+oMat+oMach,direct,arariR,rowSell,optSell,exSell,directS,arari,houtei,kentai,genba,shoR,sho,anzen,genka,total,kouji,hasu};
 }
 // 入れ忘れ確認：[項目名, すでに入っているかの判定, 出す条件]
-const hasKind=(j,re)=>j.tasks.some(t=>re.test(t.kind));
+const hasKind=(j,re)=>j.tasks.some(t=>re.test(tl(t)));
 const FORGET=[
   ['ブルーシート養生',/ブルーシート|シート養生|養生/],
   ['資材運搬・小運搬',/運搬|運賃/],
@@ -645,7 +648,7 @@ const FORGET=[
   ['宿泊・遠方通勤費',/宿泊|通勤|旅費/,j=>j.dist==='A']
 ];
 function forgotten(j){
-  const names=[...j.tasks.map(t=>t.kind),...(j.opt||[]).map(o=>o.name),...(j.extra||[]).map(e=>e.name)].join('／'), no=j.optNo||[];
+  const names=[...j.tasks.map(t=>tl(t)),...(j.opt||[]).map(o=>o.name),...(j.extra||[]).map(e=>e.name)].join('／'), no=j.optNo||[];
   return FORGET.filter(([n,re,cond])=>(!cond||cond(j))&&!re.test(names)&&!no.includes(n)).map(x=>x[0]);
 }
 function renderBudget(){
@@ -657,12 +660,12 @@ function renderBudget(){
   const exNo=extra.filter(e=>!(pf(e.cost)>0)).length;
   const inp=(id,v,w,step)=>`<input type="number" step="${step||'any'}" min="0" id="${id}" value="${v}" style="width:${w||64}px;text-align:right">`;
   $('main').innerHTML=`<div class="mst wide">
-    <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">直接工事費 ${yen(B.directS)}円（粗利 ${p1(B.arariR)}%込み）＋ 現場管理費 ${yen(B.genba)}円 ＋ 諸経費 ${yen(B.sho)}円 ＝ 実行予定予算 <strong>${yen(B.total)}</strong>円</span><span style="flex:1"></span><button class="btn" id="bXls" title="実行予算書をExcelに">📄 実行予算書をExcelに</button><button class="btn" id="bEdit">工種・数量を直す</button><button class="btn primary" id="bNext">→ ④ 見積へ</button></div>
-    <p class="note">実行予算は「実行予定予算」。見積の前に、ここで原価に粗利を乗せ、経費を積み上げます。ここの直接工事費・現場管理費・諸経費が、同じ数字のまま ④ 見積 に並びます（万円未満の切捨ては ④ の最後だけ）。歩掛は2段階：ATLUSの人工がある工種はATLUS、無い工種は標準積算（実績があれば実績の中央値）。${j.tags.length?`条件タグ：${esc(j.tags.join(','))}`:''}</p>
+    <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">直接工事費 ${yen(B.directS)}円（粗利 ${p1(B.arariR)}%込み）＋ 現場管理費 ${yen(B.genba)}円 ＋ 諸経費 ${yen(B.sho)}円 － 端数 ${yen(-B.hasu)}円 ＝ 実行予定予算 <strong>${yen(B.kouji)}</strong>円（④ 見積の工事金額と同じ）</span><span style="flex:1"></span><button class="btn" id="bXls" title="実行予算書をExcelに">📄 実行予算書をExcelに</button><button class="btn" id="bEdit">工種・数量を直す</button><button class="btn primary" id="bNext">→ ④ 見積へ</button></div>
+    <p class="note">実行予算は「実行予定予算」。見積の前に、ここで原価に粗利を乗せ、経費を積み上げます。ここの直接工事費・現場管理費・諸経費・端数調整・合計が、同じ数字のまま ④ 見積 に並びます（万円未満の切捨ては最後に1回だけ）。歩掛は2段階：ATLUSの人工がある行（工種の下の名称・規格ごと）はATLUS、無い行は標準積算（実績があれば実績の中央値）。${j.tags.length?`条件タグ：${esc(j.tags.join(','))}`:''}</p>
     <h3 style="margin:10px 0 4px">1．設計書の工種（直接工事費）</h3>
     <p class="note">原価＝人日（日数×人数）×人日単価 ${yen(md0)}円 ＋ 日数×機械・車両日額 ＋ 数量×材料単価。日数＝ATLUSの人工÷人数、または 数量÷（日当り施工量×人数／標準人数）。</p>
     <div class="ttw"><table class="tt" style="min-width:1150px"><thead><tr><th>工種</th><th class="num">数量</th><th>歩掛りの出所</th><th class="num">人数</th><th class="num">日数</th><th class="num">人日</th><th class="num">人件費</th><th class="num">機械・車両</th><th class="num">材料</th><th class="num">原価</th><th class="num">見積金額<span class="u" style="display:block">粗利込み</span></th><th class="num">幅</th><th class="num">官 日当り／日数</th><th class="num">官 金額</th></tr></thead><tbody>
-    ${rows.map((r,k)=>`<tr><td>${esc(r.t.kind)}${r.b?'':' <span class="warn">歩掛未登録</span>'}</td>
+    ${rows.map((r,k)=>`<tr><td>${esc(r.t.kind)}${r.b?'':' <span class="warn">歩掛未登録</span>'}${r.t.spec?`<span class="u" style="display:block;padding-left:1em">${esc(r.t.spec)}</span>`:''}</td>
       <td class="num">${r.q?fmt(r.q)+esc(r.b?.unit||''):'—'}</td>
       <td>${r.src?.ninku>0?`<select data-bs="${k}" aria-label="歩掛りの出所"><option value=""${r.an?' selected':''}>ATLUS（${fmt(r.src.ninku)}人工）</option><option value="std"${r.an?'':' selected'}>標準積算・実績（${r.st?fmt(r.st.rate):'—'}${esc(r.b?.unit||'')}/日）</option></select>`:`<span class="u">標準積算${r.st&&r.st.n?'→実績 n='+r.st.n:''}　${r.st?fmt(r.st.rate):'—'}${esc(r.b?.unit||'')}/日${r.b?.men?'（標準'+r.b.men+'人）':''}</span>`}</td>
       <td class="num"><input type="number" min="1" step="1" data-men="${k}" value="${r.men}" style="width:56px;text-align:right" aria-label="人数"></td>
@@ -700,8 +703,10 @@ function renderBudget(){
       <tr><td>　建退共の掛金＝延べ ${fmt(B.manDays)}人 × ${inp('pKentai',P.kentai,72,10)} 円 × 加入率 ${inp('pKRate',p1(P.kentaiRate),64,5)} %</td><td class="num">${yen(B.kentai)}</td></tr>
       <tr><td><strong>諸経費</strong>＝直接工事費 × ${inp('pSho',p1(B.shoR),64,0.5)} %<span class="u">　調整しろ（この案件だけの率）</span></td><td class="num"><strong>${yen(B.sho)}</strong></td></tr>
       <tr><td class="u">　うち安全衛生経費＝労務費 × ${inp('pAnzen',p1(P.anzen),64,0.5)} %（諸経費の内数）</td><td class="num u">${yen(B.anzen)}</td></tr>
-    </tbody><tfoot><tr><td>実行予定予算（直接工事費＋現場管理費＋諸経費）</td><td class="num">${yen(B.total)}</td></tr></tfoot></table></div>
-    <p class="note">④ 見積（税抜）はいま <strong>${yen(T.est)}</strong>円${T.mode==='bud'?`（上の ${yen(B.total)}円を最後に万円未満切捨）`:T.mode==='src'?'（取込元の見積書どおり。この積み上げで出すには ④ で切り替え）':'（見積単価×数量。この積み上げで出すには ④ で切り替え）'}。直接工事費の原価 ${yen(B.genka)}円との差は <strong class="${T.est-B.genka<0?'warn':''}">${yen(T.est-B.genka)}</strong>円（粗利＋現場管理費＋諸経費）。法定福利費16%・安全衛生経費10%は見積書に出す値なので、見積書の労務費（粗利込み）に掛けています。率と単価は全案件共通（扇屋の見積書 49-014 の組み方：16%・320円・10%）。${kan?`官積算（取込金額）の合計は ${yen(kan)}円。`:''}</p>
+      <tr><td>計（直接工事費＋現場管理費＋諸経費）</td><td class="num">${yen(B.total)}</td></tr>
+      <tr><td>端数調整（最後に万円未満切捨）</td><td class="num">${yen(B.hasu)}</td></tr>
+    </tbody><tfoot><tr><td>実行予定予算 ＝ ④ 見積の工事金額（税抜）</td><td class="num">${yen(B.kouji)}</td></tr></tfoot></table></div>
+    <p class="note">④ 見積の工事金額（税抜）も同じ <strong>${yen(T.est)}</strong>円です。直接工事費の原価 ${yen(B.genka)}円との差は <strong class="${B.kouji-B.genka<0?'warn':''}">${yen(B.kouji-B.genka)}</strong>円（粗利＋現場管理費＋諸経費）。法定福利費16%・安全衛生経費10%は見積書に出す値なので、見積書の労務費（粗利込み）に掛けています。率と単価は全案件共通（扇屋の見積書 49-014 の組み方：16%・320円・加入率80%・10%）。${j.atlas?.kouji?`取り込んだ見積書の工事金額は ${yen(j.atlas.kouji)}円（差 ${yen(B.kouji-j.atlas.kouji)}円）。`:''}${kan?`官積算（取込金額）の直接工事費は ${yen(kan)}円。`:''}</p>
     ${j.atlas?atlasPanel(j,rows):''}
   </div>`;
   const re=()=>{save();renderBudget()};
@@ -763,13 +768,13 @@ function renderDesign(){
   if(!j){$('main').innerHTML=`<div class="mst wide">${head}<p class="empty">案件がありません。ATLUSのExcelを取り込むか、手入力で追加してください（試したいだけなら「案件一覧」→「見本案件を入れる」）。</p>${historyHtml()}</div>`;$('dImp').onclick=()=>openImport();$('dAdd').onclick=()=>openEdit();return}
   const used=j.tasks.filter(t=>!bk(t.kind)).length;
   const rows=j.tasks.map((t,k)=>`<tr data-k="${k}"><td><input type="text" class="k" list="kinds" value="${esc(t.kind)}" style="width:260px" aria-label="工種">${bk(t.kind)?'':' <span class="warn">歩掛未登録</span>'}</td>
+    <td><input type="text" class="sp" value="${esc(t.spec||'')}" placeholder="${esc(t.src?.rows?.length&&!t.spec?t.src.rows.map(r=>r.name).join('／').slice(0,60):'')}" style="width:300px" aria-label="名称・規格">${t.src?.ninku>0?`<span class="u" style="display:block">ATLUS ${fmt(t.src.ninku)}人工</span>`:''}${t.src?.qtyNote?`<span class="u" style="display:block">数量：${esc(t.src.qtyNote)}</span>`:''}</td>
     <td class="num"><input type="number" step="any" min="0" class="q" value="${esc(t.qty??'')}" style="width:100px;text-align:right" aria-label="数量"></td><td class="u">${esc(bk(t.kind)?.unit||'')}</td>
     <td class="num"><input type="number" min="1" step="1" class="m" value="${esc(t.men||'')}" placeholder="${bk(t.kind)?.men||4}" style="width:56px;text-align:right" aria-label="人数"></td>
     <td><select class="c" aria-label="担当監督">${opts(S.sups,t.crew||'',j.sup?'主担当（'+esc(j.sup)+'）':'未定')}</select></td>
     <td><select class="h" aria-label="施工班">${opts(S.han||[],t.han||'','未定')}</select></td>
-    <td class="u">${t.src?.rows?.length?esc(t.src.rows.map(r=>r.name).join('／')).slice(0,80):''}${t.src?.qtyNote?`<span style="display:block">数量：${esc(t.src.qtyNote)}</span>`:''}</td>
     <td><button type="button" class="x" data-del="${k}" aria-label="削除">×</button></td></tr>`).join('');
-  const extra=(j.extra||[]).map(e=>`<tr><td>${esc(e.name)} <span class="warn">自社工種に未対応</span></td><td class="num">${e.qty?fmt(e.qty):''}</td><td class="u">${esc(e.unit||'')}</td><td></td><td></td><td></td><td class="u">${e.amount?'官 '+yen(e.amount)+'円':''}</td><td></td></tr>`).join('');
+  const extra=(j.extra||[]).map(e=>`<tr><td>${esc(e.name)} <span class="warn">自社工種に未対応</span></td><td class="u">${e.amount?'官 '+yen(e.amount)+'円':''}</td><td class="num">${e.qty?fmt(e.qty):''}</td><td class="u">${esc(e.unit||'')}</td><td></td><td></td><td></td><td></td></tr>`).join('');
   $('main').innerHTML=`<div class="mst wide">${head}
     <h3 style="margin:8px 0 4px">案件</h3>
     <div class="fg">
@@ -786,8 +791,8 @@ function renderDesign(){
       <label class="f">条件タグ<input id="fTags" value="${esc((j.tags||[]).join(','))}" placeholder="急勾配,狭小"></label>
     </div>
     <h3 style="margin:14px 0 4px">工種と数量（設計書）</h3>
-    <div class="ttw"><table class="tt" style="min-width:760px"><thead><tr><th>工種</th><th class="num">数量</th><th>単位</th><th class="num">人数</th><th>担当監督</th><th>施工班</th><th>元の名称（取込）</th><th></th></tr></thead><tbody>${rows}${extra}</tbody></table></div>
-    <p class="note">人数＝この工種に付ける作業員の人数（空欄なら工種の標準人数）。日数は人数で変わり、原価は人日×人日単価。担当監督が空欄なら主担当の監督が受け持ちます。施工班は名簿（データ・設定）から選び、同じ班が同じ日に別の案件へ入ると ⑤ 計画工程 に警告が出ます。</p>
+    <div class="ttw"><table class="tt" style="min-width:760px"><thead><tr><th>工種</th><th>名称・規格</th><th class="num">数量</th><th>単位</th><th class="num">人数</th><th>担当監督</th><th>施工班</th><th></th></tr></thead><tbody>${rows}${extra}</tbody></table></div>
+    <p class="note">名称・規格＝工種の下の細目（ATLUSを取り込むと行ごとに入る。同じ工種でも規格が違えば別の行で、歩掛りも工程表の帯も行ごと）。人数＝この行に付ける作業員の人数（空欄なら工種の標準人数）。日数は人数で変わり、原価は人日×人日単価。担当監督が空欄なら主担当の監督が受け持ちます。施工班は名簿（データ・設定）から選び、同じ班が同じ日に別の案件へ入ると ⑤ 計画工程 に警告が出ます。</p>
     <div class="bar" style="margin-top:8px"><button class="btn" id="dRow">工種を追加</button><button class="btn" id="dTpl">法面の標準工程を入れる</button><span style="flex:1"></span><button class="btn" id="dXls" title="表紙・本工事費表・実行予算書・工程表を1冊のExcelに">📄 この案件をExcelに</button><button class="btn danger" id="dDelJob">この案件を削除</button><button class="btn" id="dDetail">日付・班の詳細編集</button><button class="btn primary" id="dNext">→ ② 歩掛りを確認</button></div>
     ${used?`<p class="note warn">歩掛りが未登録の工種が${used}件あります。② 歩掛り で登録するか、工種名をマスタに合わせてください。</p>`:''}
     ${j.atlas?`<p class="note">ATLUS取込済み：直接工事費 ${yen(Object.values(j.atlas.totals).reduce((a,b)=>a+(b||0),0))}円（労材機は ③ 実行予算 で自社と並びます）</p>`:''}
@@ -802,7 +807,8 @@ function renderDesign(){
     tr.querySelector('.q').onchange=e=>{t.qty=e.target.value;applyJob(j);save();render()};
     tr.querySelector('.m').onchange=e=>{t.men=e.target.value?Math.max(1,parseInt(e.target.value)||1):'';applyJob(j);save();render()};
     tr.querySelector('.c').onchange=e=>{t.crew=e.target.value;save();render()};
-    tr.querySelector('.h').onchange=e=>{t.han=e.target.value;save();render()};});
+    tr.querySelector('.h').onchange=e=>{t.han=e.target.value;save();render()};
+    tr.querySelector('.sp').onchange=e=>{t.spec=e.target.value.trim();save();render()};});
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('この工種を削除しますか？')){j.tasks.splice(+b.dataset.del,1);save();render()}});
   $('dImp').onclick=()=>openImport(j.id); $('dAdd').onclick=()=>openEdit();
   $('dRow').onclick=()=>{const st=j.tasks.length?j.tasks[j.tasks.length-1].end||toS(today()):toS(nextWork(today()+7));j.tasks.push({id:uid(),kind:'',qty:'',start:st,end:st,crew:'',lock:false,price:''});save();render()};
@@ -818,7 +824,7 @@ function renderActual(){
   const pct=(a,b)=>`left:${((toN(a)-d0)/span*100).toFixed(1)}%;width:${Math.max(0.8,(toN(b)-toN(a)+1)/span*100).toFixed(1)}%`;
   const tr=rows.map((r,k)=>{const t=r.t; const pd=t.start&&t.end?wdays(toN(t.start),toN(t.end)):0; const ad=t.aStart&&t.aEnd?wdays(toN(t.aStart),toN(t.aEnd)):'';
     const rec=(r.b?.actuals||[]).find(a=>a.tid===t.id);
-    return `<tr data-k="${k}"><td>${esc(t.kind)}<span class="u" style="display:block">${esc(t.crew||'班未定')}</span></td>
+    return `<tr data-k="${k}"><td>${esc(t.kind)}${t.spec?`<span class="u" style="display:block;padding-left:1em">${esc(t.spec)}</span>`:''}<span class="u" style="display:block">${esc(t.crew||'班未定')}</span></td>
       <td class="num">${r.q?fmt(r.q)+esc(r.b?.unit||''):'—'}</td>
       <td class="u">${t.start?md(toN(t.start)):''}〜${t.end?md(toN(t.end)):''}<span style="display:block">${pd?pd+'日':''}</span></td>
       <td><input type="date" class="as" value="${esc(t.aStart||'')}" aria-label="実績開始"> 〜 <input type="date" class="ae" value="${esc(t.aEnd||'')}" aria-label="実績終了"></td>
@@ -1040,10 +1046,10 @@ function drawImport(){
     const rows=impRows(); IMP.rows=rows;
     const kinds=S.bugakari.map(b=>b.kind);
     const AT=!!IMP.atlas;
-    body+=`<p class="note">${rows.length}行を検出。${AT?'自社工種への対応だけ確認してください（自動で推定済み。一度決めた対応は次回から自動で入ります）。':'自社工種との対応表：名称から自動で推定しています（違っていれば直す）。一度決めた対応は次回から自動で入ります。同じ自社工種に結んだ行は数量・金額を合算します。'}</p>
+    body+=`<p class="note">${rows.length}行を検出。${AT?'ATLUSの行は、工種の下に「名称・規格」を付けて1行ずつ取り込みます（歩掛はその行のATLUSの人工、無ければ標準積算）。「1式」の行は同じ工種にまとめて数量を当てます。':'自社工種との対応表：名称から自動で推定しています（違っていれば直す）。一度決めた対応は次回から自動で入ります。同じ自社工種に結んだ行は数量・金額を合算します。'}</p>
     <div class="ttw"><table class="tt" style="min-width:760px"><thead><tr>${AT?'':'<th>行</th><th>コード</th>'}<th>名称</th><th class="num">数量</th><th class="num">金額</th>${AT?'':'<th class="num">日進量</th>'}<th>自社工種</th></tr></thead><tbody>
     ${rows.map((r,k)=>{let cur=S.taiou[keyOf(r)]??''; if(cur===''&&IMP.atlas){cur=guessKind(r.name); if(!cur&&!/式/.test(r.unit)&&ninkuForRows(IMP.atlas,[r])>0) cur='__atlas'; if(cur) S.taiou[keyOf(r)]=cur;} return `<tr>${AT?'':`<td>${r.row}</td><td>${esc(r.code)}</td>`}<td>${esc(r.name)}</td><td class="num">${fmt(r.qty)}${esc(r.unit)}</td><td class="num">${r.amount?yen(r.amount):''}</td>${AT?'':`<td class="num">${r.daily?fmt(r.daily):''}</td>`}
-      <td><select data-map="${k}" aria-label="自社工種"><option value="">未対応（官の単価・金額をそのまま使う）</option><option value="__skip"${cur==='__skip'?' selected':''}>取り込まない</option>${IMP.atlas?`<option value="__atlas"${cur==='__atlas'?' selected':''}>ATLUSの名称のまま工種にする（歩掛はATLUSの人工）</option>`:''}${kinds.map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`}).join('')}
+      <td><select data-map="${k}" aria-label="自社工種"><option value="">未対応（官の単価・金額をそのまま使う）</option><option value="__skip"${cur==='__skip'?' selected':''}>取り込まない</option>${IMP.atlas?`<option value="__atlas"${cur==='__atlas'?' selected':''}>該当なし：ATLUSの工種見出しで新しい工種を作る（歩掛はATLUSの人工）</option>`:''}${kinds.map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`}).join('')}
     </tbody></table></div>
     <div class="fg"><label class="f">取込先<select id="iJob"><option value="">新しい案件</option>${S.jobs.map(x=>`<option value="${x.id}"${x.id===IMP.jobId?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
     <label class="f">新しい案件の名称<input id="iName" value="${esc(IMP.newName||'')}"></label>
@@ -1079,33 +1085,39 @@ function setSheet(n){
   drawImport();
 }
 function doImport(status){
-  const by={}, extra=[];
-  // ATLUSにしかない工種：名称のまま自社マスタに工種を作る（日当り施工量はATLUSの人工から逆算、材料単価は未設定）
-  if(IMP.atlas) IMP.rows.forEach(r=>{ if(S.taiou[keyOf(r)]!=='__atlas') return;
-    const nk=ninkuForRows(IMP.atlas,[r]); if(!(nk>0)||!(r.qty>0)) return;
-    const kind=txt(r.name).slice(0,40); if(!kind) return;
-    if(!bk(kind)){const men=stdMen(kind); S.bugakari.push({kind,unit:r.unit,rate:Math.round(r.qty/(nk/men)*100)/100,men,mach:0,crewDay:0,matUnit:0,price:Math.round((r.amount||0)/r.qty),src:`ATLUS（${IMP.newName||'取込'}）${Math.round(nk*100)/100}人工/${r.qty}${r.unit}`,actuals:[],codes:[]})}
-    r._kind=kind;});
-  IMP.rows.forEach(r=>{const k0=S.taiou[keyOf(r)], k=k0==='__atlas'?(r._kind||''):k0;
+  const groups=[], byKey={}, extra=[], AT=IMP.atlas;
+  const nu=u=>String(u||'').replace('㎡','m2').replace('㎥','m3').replace('ｍ','m').toLowerCase();
+  // 名称・規格＝ATLUSの行名から先頭の工種見出しを除いた残り
+  const specOf=name=>{const p=txt(name).split(' ').filter(Boolean); return p.length>1?p.slice(1).join(' '):''};
+  IMP.rows.forEach((r,ri)=>{let k=S.taiou[keyOf(r)];
     if(k==='__skip') return;
+    if(k==='__atlas'){ // 標準積算に該当が無い工種：ATLUSの工種見出しでマスタに作る（日当り施工量はATLUSの人工から逆算、材料・機械は未設定）
+      const nk=AT?ninkuForRows(AT,[r]):0, kind=txt(r.name).split(' ')[0].slice(0,40); k='';
+      if(nk>0&&r.qty>0&&kind&&!/式/.test(r.unit)){
+        if(!bk(kind)){const men=stdMen(kind); S.bugakari.push({kind,unit:r.unit,rate:Math.round(r.qty/(nk/men)*100)/100,men,mach:0,crewDay:0,matUnit:0,price:Math.round((r.amount||0)/r.qty),src:`ATLUS（${IMP.newName||'取込'}）${Math.round(nk*100)/100}人工/${r.qty}${r.unit}／材料・機械は未設定`,actuals:[],codes:[]})}
+        k=kind}}
     if(!k||!bk(k)){extra.push({name:r.name,code:r.code,qty:r.qty,unit:r.unit,amount:r.amount,est:r.amount||undefined});return}
-    const o=by[k]||(by[k]={qty:0,amount:0,daily:0,days:0,rows:[]});
+    // ATLUSの行（数量のある行）は名称・規格ごとに1行。「1式」の行と一般の数量表は同じ工種にまとめる
+    const sep=!!AT&&!/式/.test(r.unit), key=sep?k+'#'+ri:k;
+    let o=byKey[key]; if(!o){o=byKey[key]={kind:k,spec:sep?specOf(r.name):'',qty:0,amount:0,daily:0,days:0,rows:[],ord:ri}; groups.push(o)}
     o.qty+=r.qty;o.amount+=r.amount;o.days+=r.days;if(!o.daily)o.daily=r.daily;o.rows.push({code:r.code,name:r.name,qty:r.qty,unit:r.unit});});
   let j=S.jobs.find(x=>x.id===IMP.jobId);
-  const oldCrew={}, oldHan={}; if(j) j.tasks.forEach(t=>{oldCrew[t.kind]=t.crew; oldHan[t.kind]=t.han||''});
+  const oldCrew={}, oldHan={}; if(j) j.tasks.forEach(t=>{oldCrew[tl(t)]=t.crew; oldHan[tl(t)]=t.han||''});
   if(!j){j={id:uid(),no:nextNo(),name:IMP.newName||'取込案件',client:'',place:'',status,startPlan:IMP.start,sup:'',color:S.jobs.length%COLORS.length,tags:[],extra:[],tasks:[],opt:[],optNo:[],arariR:'',diff:'B',dist:'B',due:'',addr:''};S.jobs.push(j)}
-  // 取込順は自社マスタの並び（準備→本体→片付け）に合わせる
-  const nu=u=>String(u||'').replace('㎡','m2').replace('㎥','m3').replace('ｍ','m').toLowerCase();
   const resolveQty=(b,o)=>{ // 「1式」で取り込まれた行に設計数量を当てる
     if(!o.rows.every(r=>/式/.test(r.unit))) return o.qty;
     const dz=(IMP.atlas?.design||[]).find(d=>nu(d.unit)===nu(b.unit)&&guessKind(d.group+' '+d.name)===b.kind);
     if(dz) {o.qtyNote='設計数量表 '+dz.group+' '+dz.name; return dz.qty}
     for(const r of o.rows){for(const m of String(r.name).matchAll(/([\d,.]+)\s*(m2|㎡|m3|㎥|本|箇所|m)(?![a-z])/gi)){if(nu(m[2])===nu(b.unit)){o.qtyNote='名称から '+m[0]; return parseFloat(m[1].replace(/,/g,''))}}}
     return null;};
-  j.tasks=S.bugakari.filter(b=>by[b.kind]).map(b=>{const o=by[b.kind]; const q=resolveQty(b,o);
+  // 並びは自社マスタの順（準備→本体→片付け）。同じ工種の中は取込元の行の順
+  const mi=k=>S.bugakari.findIndex(b=>b.kind===k);
+  groups.sort((a,c)=>mi(a.kind)-mi(c.kind)||a.ord-c.ord);
+  j.tasks=groups.map(o=>{const b=bk(o.kind), q=resolveQty(b,o);
     if(q==null){extra.push({name:b.kind+'（'+o.rows.map(r=>r.name).join('／').slice(0,40)+'）数量不明・1式',qty:1,unit:'式',amount:o.amount,est:o.amount||undefined}); return null}
-    const nk=IMP.atlas?ninkuForRows(IMP.atlas,o.rows):0; return {id:uid(),kind:b.kind,qty:Math.round(q*100)/100,start:IMP.start,end:IMP.start,crew:oldCrew[b.kind]||'',han:oldHan[b.kind]||'',price:'',src:{amount:o.amount,daily:o.daily,days:o.days,rows:o.rows,ninku:nk?Math.round(nk*100)/100:0,qtyNote:o.qtyNote||''}}}).filter(Boolean);
-  j.extra=extra; if(IMP.atlas){j.atlas=IMP.atlas; if(!j.place&&IMP.atlas.meta.place) j.place=IMP.atlas.meta.place; if(!j.no&&IMP.atlas.meta.no) j.no=IMP.atlas.meta.no; if(IMP.atlas.keihi?.length){j.estMode='src'; j.tasks.forEach(t=>{const q=parseFloat(t.qty); if(t.src?.amount&&q>0) t.price=String(Math.round(t.src.amount/q*10000)/10000)});}} packJob(j);
+    const nk=AT?ninkuForRows(AT,o.rows):0, t0={kind:o.kind,spec:o.spec};
+    return {id:uid(),kind:o.kind,spec:o.spec,qty:Math.round(q*100)/100,start:IMP.start,end:IMP.start,crew:oldCrew[tl(t0)]||'',han:oldHan[tl(t0)]||'',price:'',src:{amount:o.amount,daily:o.daily,days:o.days,rows:o.rows,ninku:nk?Math.round(nk*100)/100:0,qtyNote:o.qtyNote||''}}}).filter(Boolean);
+  j.extra=extra; if(IMP.atlas){j.atlas=IMP.atlas; if(!j.place&&IMP.atlas.meta.place) j.place=IMP.atlas.meta.place; if(!j.no&&IMP.atlas.meta.no) j.no=IMP.atlas.meta.no;} packJob(j);
   return j.id;
 }
 window.__dbg=()=>({IMP,S,sampleJobs});window.__setJob=id=>{V.bud=id};window.__ohgiyaImport=(aoa,map)=>{IMP={aoa,rows:null,start:toS(nextWork(today()+7)),jobId:'',newName:'テスト取込'};const g=guess(aoa);IMP.hdr=g.hdr;IMP.cols=g.cols;IMP.rows=impRows();Object.assign(S.taiou,map||{});return doImport('見込み')};
@@ -1117,7 +1129,7 @@ function estRows(j){
   return j.tasks.map(t=>{const b=bk(t.kind), q=parseFloat(t.qty)||0, ov=parseFloat(t.price), price=isFinite(ov)&&t.price!==''?ov:(b?b.price:0);
     return {t,b,q,price,ov:isFinite(ov)&&t.price!=='',amt:q*price}});
 }
-const estModeOf=j=>{const m=j.estMode||'bud'; return m==='src'&&!(j.atlas?.keihi||[]).length?'bud':m};
+const estModeOf=j=>'bud'; // v3.9：見積は常に ③ 実行予算の数字（取込元の見積書の金額は参考表示のみ）
 function estTotals(j){
   const BT=budTotals(j), mode=estModeOf(j), E=S.est, P=S.bud, srcK=(j.atlas?.keihi||[]), useSrc=mode==='src';
   const base=estRows(j), ex=j.extra||[], opt=j.opt||[], p1=v=>Math.round(v*1000)/10;
@@ -1129,13 +1141,13 @@ function estTotals(j){
     optRows=opt.map((o,k)=>({o,cost:optSum(o),amt:BT.optSell[k]}));
     exAmt=BT.exSell.slice();
     direct=BT.directS; const sho=BT.sho;
-    lines=[{name:'現場管理費',sub:'法定福利費＋建退共制度の掛金',amt:BT.genba,desc:'現場管理費（法定福利費＋建退共制度の掛金）'},
+    lines=[{name:'現場管理費',sub:'法定福利費＋建退共制度の掛金',amt:BT.genba},
       {name:'　うち法定福利費の事業主負担額',sub:'労務費合計の',qty:p1(P.houtei),unit:'%',base:BT.laborS,amt:BT.houtei,inner:true,desc:`　うち法定福利費の事業主負担額（労務費 ${yen(BT.laborS)} × ${p1(P.houtei)}%）`},
-      {name:'　うち建退共制度の掛金',sub:`就労延日数×日額×加入率${p1(P.kentaiRate)}%`,qty:BT.manDays,unit:'人',base:P.kentai,amt:BT.kentai,inner:true,note:`掛金日額${P.kentai}円/日`,desc:`　うち建退共制度の掛金（延べ ${fmt(BT.manDays)}人 × ${P.kentai}円 × 加入率${p1(P.kentaiRate)}%）`},
+      {name:'　うち建退共制度の掛金',sub:`就労延日数×日額×加入率 ${p1(P.kentaiRate)}%`,qty:BT.manDays,unit:'人',base:P.kentai,amt:BT.kentai,inner:true,note:`掛金日額${P.kentai}円/日`,desc:`　うち建退共制度の掛金（延べ ${fmt(BT.manDays)}人 × ${P.kentai}円 × 加入率${p1(P.kentaiRate)}%）`},
       {name:'諸経費',sub:'直接工事費の',qty:p1(BT.shoR),unit:'%',base:direct,amt:sho,desc:`諸経費（直接工事費 × ${p1(BT.shoR)}%）`},
       {name:'　うち安全衛生経費',sub:'労務費合計の',qty:p1(P.anzen),unit:'%',base:BT.laborS,amt:BT.anzen,inner:true,desc:`　うち安全衛生経費（労務費 ${yen(BT.laborS)} × ${p1(P.anzen)}%）`}];
     sub=BT.total;
-    est=Math.floor(sub/10000)*10000; lines.push({name:'端数調整',amt:est-sub,note:'万円未満切捨',desc:'端数調整（万円未満切捨）'});
+    est=BT.kouji; lines.push({name:'端数調整',amt:BT.hasu,note:'万円未満切捨',desc:'端数調整（万円未満切捨）'});
   } else {
     rows=base; optRows=opt.map(o=>({o,cost:optSum(o),amt:Math.round(optSum(o))})); exAmt=ex.map(e=>e.est??e.amount??0); direct=tot();
     if(useSrc){
@@ -1148,33 +1160,36 @@ function estTotals(j){
     }
   }
   const tax=Math.round(est*E.tax), bud=BT.genka, rev=Math.ceil(bud/(1-E.kanri-E.rieki)/10000)*10000;
-  return {mode,rows,optRows,exAmt,direct,lines,keihi,houtei,sub,est,tax,bud,rev,useSrc,srcK,BT};
+  const AT=j.atlas?.totals||{}, uchi=mode==='bud'?{mat:BT.matS,labor:BT.laborS,note:''}:{mat:AT['材料費']||BT.mat,labor:AT['人件費']||BT.labor,note:j.atlas?'労材機集計':'自社実行予算'};
+  return {mode,rows,optRows,exAmt,direct,lines,uchi,keihi,houtei,sub,est,tax,bud,rev,useSrc,srcK,BT};
 }
 function renderEst(){
   if(!S.jobs.length){$('main').innerHTML='<p class="empty">案件がありません。「① 設計書」で案件を作ってください。</p>';return}
   const j=curJob(), T=estTotals(j), E=S.est, BR=T.BT.rows, bud=T.mode==='bud';
-  const modes=[['bud','実行予算から積み上げ（③ と同じ直接工事費・現場管理費・諸経費。最後に万円未満切捨）'],['rate','見積単価×数量＋率（諸経費・法定福利費を直接工事費比で。万円未満切上）']];
-  if(T.srcK.length) modes.push(['src',`取込元の見積書どおり（${T.srcK.map(k=>k.name+' '+yen(k.amt)).join('／')}${j.atlas.kouji?'＝工事金額 '+yen(j.atlas.kouji):''}）`]);
+  // 画面の並びは扇屋の見積書（49-014）の「本工事費表」と同じ：名称・規格｜数量｜単位｜単価｜金額｜備考
+  const HD='<tr><th>名称・規格</th><th class="num">数量</th><th>単位</th><th class="num">単価</th><th class="num">金額</th><th>備考</th></tr>';
+  const R=(name,sub,qty,unit,price,amt,note,o={})=>`<tr${o.inner?' class="u"':''}><td style="max-width:560px;white-space:normal${o.b?';font-weight:700':''}">${name}${sub?`<span class="u" style="display:block;padding-left:1em;font-weight:400;white-space:normal">${sub}</span>`:''}</td><td class="num">${qty??''}</td><td>${unit||''}</td><td class="num">${price??''}</td><td class="num"${o.b?' style="font-weight:700"':''}>${amt??''}</td><td class="u" style="white-space:nowrap">${note||''}</td></tr>`;
   $('main').innerHTML=`<div class="mst wide">
     <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">${esc(j.client||'')}　${esc(j.place||'')}</span><span style="flex:1"></span><button class="btn" id="sXls" title="表紙＋本工事費表（扇屋書式）をExcelに">📄 見積書をExcelに</button><button class="btn" id="sPrint">印刷</button><button class="btn" id="sBack">← ③ 実行予算</button><button class="btn primary" id="sNext">→ ⑤ 計画工程へ</button></div>
-    <div style="margin:4px 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"><strong>見積の組み方</strong>${modes.map(([v,l])=>`<label class="chk" style="display:block;margin-top:4px"><input type="radio" name="eMode" value="${v}"${T.mode===v?' checked':''}>${esc(l)}</label>`).join('')}</div>
-    <p class="note">${bud?'③ 実行予算の数字をそのまま並べています。直接工事費（粗利 '+(Math.round(T.BT.arariR*1000)/10)+'%込み）・現場管理費・諸経費は ③ と同額で、違うのは最後の端数調整（万円未満切捨）だけです。金額を変えたいときは ③ で粗利か諸経費の％を動かしてください。':'見積単価の初期値は ② 歩掛り の「見積単価」（48期出来高の中央値・材工共・税抜）。行ごとに上書きできます（空欄に戻すとマスタ値）。ATLUS取込の工事は「官単価」が並ぶので、官で出すなら「採用」'+(BR.some(b=>b.kanPrice)?'（<button type="button" class="btn" id="sAdoptAll" style="padding:0 8px;font-size:12px">全行を官単価にする</button>）':'')+'。未対応行は官の金額をそのまま使います。設計書にない任意項目は原価のまま入ります。'}</p>
-    <div class="ttw"><table class="tt" style="min-width:960px"><thead><tr><th>工種</th><th class="num">数量</th><th>単位</th><th class="num">原価</th><th class="num">官単価（ATLUS）</th><th class="num">見積単価</th><th class="num">金額</th></tr></thead><tbody>
-    ${T.rows.map((r,k)=>{const b=BR[k];return `<tr><td>${esc(r.t.kind)}${r.b?'':' <span class="warn">歩掛未登録</span>'}</td><td class="num">${r.q?fmt(r.q):'—'}</td><td class="u">${esc(r.b?.unit||'')}</td>
-      <td class="num u">${yen(b.total)}</td>
-      <td class="num">${b?.kanPrice?`${yen(Math.round(b.kanPrice))}${bud?'':`<button type="button" class="btn" data-adopt="${k}" style="display:block;margin:2px auto 0;padding:0 6px;font-size:11px">採用</button>`}`:'—'}</td>
-      <td class="num">${bud?yen(Math.round(r.price)):`<input type="number" step="any" min="0" data-pr="${k}" value="${r.ov?esc(r.t.price):''}" placeholder="${esc(r.b?.price??0)}" style="width:110px;text-align:right" aria-label="見積単価">`}</td>
-      <td class="num">${yen(r.amt)}</td></tr>`}).join('')}
-    ${T.optRows.map(x=>`<tr><td>${esc(x.o.name||'（名称なし）')} <span class="u">設計書外</span></td><td class="num">1</td><td class="u">式</td><td class="num u">${yen(x.cost)}</td><td class="num">—</td><td class="num">${yen(x.amt)}</td><td class="num">${yen(x.amt)}</td></tr>`).join('')}
-    ${(j.extra||[]).map((e,k)=>`<tr><td>${esc(e.name)} <span class="warn">自社工種に未対応</span></td><td class="num">${e.qty?fmt(e.qty):'—'}</td><td class="u">${esc(e.unit||'')}</td><td class="num u">${pf(e.cost)?yen(pf(e.cost)):'未入力'}</td><td class="num">${e.amount&&e.qty?yen(Math.round(e.amount/e.qty)):'—'}</td><td class="num">${bud?'—':`<input type="number" step="any" min="0" data-ex="${k}" value="${e.est??''}" placeholder="${e.amount?'官 '+yen(e.amount):'金額を直接入力'}" style="width:130px;text-align:right" aria-label="金額">`}</td><td class="num">${yen(T.exAmt[k])}</td></tr>`).join('')}
-    </tbody><tfoot>
-      <tr><td>直接工事費</td><td colspan="5"></td><td class="num">${yen(T.direct)}</td></tr>
-      ${T.lines.map(l=>`<tr${l.inner?' class="u"':''}><td${l.inner?' style="font-weight:400"':''}>${l.key?`${esc(l.name)} <input type="number" step="0.5" min="0" id="${l.key==='keihi'?'eKeihi':'eHoutei'}" value="${l.qty}" style="width:70px"> %`:esc(l.desc||l.name)}</td><td colspan="5"></td><td class="num"${l.inner?' style="font-weight:400"':''}>${l.inner?'（'+yen(l.amt)+'）':yen(l.amt)}</td></tr>`).join('')}
-      <tr><td>見積金額（税抜）${T.useSrc&&j.atlas.kouji&&Math.abs(j.atlas.kouji-T.est)>1?`<span class="warn" style="display:block">見積書の工事金額 ${yen(j.atlas.kouji)} と ${yen(T.est-j.atlas.kouji)} 差（直接工事費の端数や単価の丸め）</span>`:''}</td><td colspan="5"></td><td class="num"><strong>${yen(T.est)}</strong></td></tr>
-      <tr><td>消費税 <input type="number" step="1" min="0" id="eTax" value="${Math.round(E.tax*100)}" style="width:60px"> %</td><td colspan="5"></td><td class="num">${yen(T.tax)}</td></tr>
-      <tr><td>見積金額（税込）</td><td colspan="5"></td><td class="num">${yen(T.est+T.tax)}</td></tr>
-    </tfoot></table></div>
-    <p class="note">${bud?`③ 実行予定予算 ${yen(T.BT.total)}円 → 見積（税抜）${yen(T.est)}円（端数調整 ${yen(T.est-T.sub)}円）。`:`③ 実行予定予算は ${yen(T.BT.total)}円で、いまの見積（税抜）${yen(T.est)}円とは ${yen(T.est-T.BT.total)}円の差があります（組み方が「実行予算から積み上げ」ではないため）。`}直接工事費の原価 ${yen(T.bud)}円との差は <strong class="${T.est-T.bud<0?'warn':''}">${yen(T.est-T.bud)}</strong>円${T.est>0?`（見積の ${Math.round((T.est-T.bud)/T.est*1000)/10}%）`:''}。</p>
+    <p class="note">見積は ③ 実行予算と同じ数字です（直接工事費・現場管理費・諸経費・端数調整・工事金額のすべて）。並びは扇屋の見積書（49-014）の「本工事費表」と同じ。金額を変えるときは ③ で粗利か諸経費の％を動かしてください。${j.atlas?.kouji?`<br>参考：取り込んだ見積書の工事金額は ${yen(j.atlas.kouji)}円（いまの積み上げとの差 ${yen(T.est-j.atlas.kouji)}円）。`:''}</p>
+    <div class="ttw"><table class="tt" style="min-width:960px"><thead>${HD}</thead><tbody>
+    ${T.rows.map((r,k)=>{const b=BR[k], sub=r.t.spec?esc(r.t.spec):(r.t.src?.rows?.length?esc(r.t.src.rows.map(y=>y.name).join('／')).slice(0,90):'');
+      return R(esc(r.t.kind)+(r.b?'':' <span class="warn">歩掛未登録</span>'),sub,r.q?fmt(r.q):'',esc(r.b?.unit||''),
+        bud?yen(Math.round(r.price)):`<input type="number" step="any" min="0" data-pr="${k}" value="${r.ov?esc(r.t.price):''}" placeholder="${esc(r.b?.price??0)}" style="width:110px;text-align:right" aria-label="見積単価">`,
+        yen(r.amt),bud?`原価 ${yen(b.total)}`:(b?.kanPrice?`官単価 ${yen(Math.round(b.kanPrice))} <button type="button" class="btn" data-adopt="${k}" style="padding:0 6px;font-size:11px">採用</button>`:''))}).join('')}
+    ${T.optRows.map(x=>R(esc(x.o.name||'（名称なし）'),'',1,'式',yen(x.amt),yen(x.amt),bud?`設計書外　原価 ${yen(x.cost)}`:'設計書外')).join('')}
+    ${(j.extra||[]).map((e,k)=>R(esc(e.name)+' <span class="warn">自社工種に未対応</span>','',e.qty?fmt(e.qty):'',esc(e.unit||''),e.qty?yen(Math.round(T.exAmt[k]/e.qty)):'',yen(T.exAmt[k]),
+        bud?(pf(e.cost)?`原価 ${yen(pf(e.cost))}`:'<span class="warn">原価未入力（③）</span>'):`<input type="number" step="any" min="0" data-ex="${k}" value="${e.est??''}" placeholder="${e.amount?'官 '+yen(e.amount):'金額を直接入力'}" style="width:130px;text-align:right" aria-label="金額">`)).join('')}
+    ${R('直接工事費計','',1,'式','',yen(T.direct),'',{b:1})}
+    ${R('　うち材料費','',1,'式','',yen(T.uchi.mat),T.uchi.note,{inner:1})}
+    ${R('　うち労務費','',1,'式','',yen(T.uchi.labor),T.uchi.note,{inner:1})}
+    ${HD}
+    ${T.lines.map(l=>R(esc(l.name),esc(l.sub||''),l.key?`<input type="number" step="0.5" min="0" id="${l.key==='keihi'?'eKeihi':'eHoutei'}" value="${l.qty}" style="width:70px;text-align:right">`:(l.qty??''),esc(l.unit||''),(l.base!==''&&l.base!=null)?yen(l.base):'',yen(l.amt),esc(l.note||''),{inner:l.inner,b:!l.inner&&!/端数/.test(l.name)})).join('')}
+    ${R('工事金額','','','','',yen(T.est),T.useSrc&&j.atlas.kouji&&Math.abs(j.atlas.kouji-T.est)>1?`<span class="warn">見積書の工事金額 ${yen(j.atlas.kouji)} と ${yen(T.est-j.atlas.kouji)} 差</span>`:'',{b:1})}
+    ${R('消費税相当額','',`<input type="number" step="1" min="0" id="eTax" value="${Math.round(E.tax*100)}" style="width:60px;text-align:right">`,'%',yen(T.est),yen(T.tax),'')}
+    ${R('合　計','','','','',yen(T.est+T.tax),'',{b:1})}
+    </tbody></table></div>
+    <p class="note">③ 実行予定予算 <strong>${yen(T.BT.kouji)}</strong>円 ＝ 見積の工事金額（税抜）<strong>${yen(T.est)}</strong>円。直接工事費の原価 ${yen(T.bud)}円との差は <strong class="${T.est-T.bud<0?'warn':''}">${yen(T.est-T.bud)}</strong>円${T.est>0?`（見積の ${Math.round((T.est-T.bud)/T.est*1000)/10}%）`:''}。</p>
   </div>`;
   $('sPrint').onclick=()=>window.print(); $('sNext').onclick=()=>goTab('board'); $('sBack').onclick=()=>goTab('bud'); $('sXls').onclick=()=>exportOne('est');
   document.querySelectorAll('[data-pr]').forEach(x=>x.onchange=()=>{j.tasks[+x.dataset.pr].price=x.value;save();renderEst()});
@@ -1182,7 +1197,6 @@ function renderEst(){
   if($('sAdoptAll')) $('sAdoptAll').onclick=()=>{BR.forEach((b,k)=>{if(b.kanPrice)j.tasks[k].price=String(Math.round(b.kanPrice*10000)/10000)});save();renderEst()};
   document.querySelectorAll('[data-ex]').forEach(x=>x.onchange=()=>{j.extra[+x.dataset.ex].est=parseFloat(x.value)||0;save();renderEst()});
   [['eKeihi','keihi'],['eHoutei','houtei'],['eTax','tax']].forEach(([id,k])=>{if($(id))$(id).onchange=e=>{S.est[k]=(parseFloat(e.target.value)||0)/100;save();renderEst()}});
-  document.querySelectorAll('input[name="eMode"]').forEach(x=>x.onchange=()=>{j.estMode=x.value;save();renderEst()});
 }
 
 // ---------- 配置ルール（班×工種ランク、監督ランク、相性表、重み） ----------
@@ -1241,9 +1255,9 @@ function optimize(){
         const sc=late*W.due+(e-earliest)/10*W.early+far*W.dist+loadOf(c)/10*W.level+((c===j.sup||c===prevCrew)?0:(W.cont??1)); // 同じ案件は同じ監督で続ける方を好む
         if(sc<bs){bs=sc;best={c,s,e,days,late}}
       });
-      if(!best){log.push(`${j.name}／${t.kind}：この難易度（${j.diff||'B'}）を担当できる監督がいません`);return}
+      if(!best){log.push(`${j.name}／${tl(t)}：この難易度（${j.diff||'B'}）を担当できる監督がいません`);return}
       t.crew=best.c;t.start=toS(best.s);t.end=toS(best.e);occupy(best.c,best.s,best.e,j,men);prevCrewEnd[best.c]=best.e;prevEnd=best.e;prevCrew=best.c;
-      if(best.late)log.push(`${j.name}／${t.kind}：納期を${best.late}日超過（${best.c}）`);
+      if(best.late)log.push(`${j.name}／${tl(t)}：納期を${best.late}日超過（${best.c}）`);
     });
     // 主担当＝工種を最も多く受け持つ監督
     const cnt={}; j.tasks.forEach(t=>{if(t.crew)cnt[t.crew]=(cnt[t.crew]||0)+1});
@@ -1266,10 +1280,10 @@ const HELP={
      ['着手予定（工程の開始見込み）','この日より前には工程を置かない。入れると最初の工種がこの日から始まり、以降が詰め直される'],['→ ② 歩掛りを確認','次の画面へ']]},
  mst:{t:'② 歩掛り：工種ごとの「1班1日の施工量」と単価',p:'既定ではこの案件で使う工種だけ表示。歩掛りの初期値はR7土木工事標準積算基準書（共通編）の日当り施工量で、出所欄にページ記号を入れています。実績を記録すると「採用値」が実績の中央値に変わり、工程と実行予算に効きます。「官 日当り」はATLUSの代価表の人工を1班の人数で割った参考値。',
   b:[['全工種（マスタ全体）を表示','この案件にない工種も含めて全部出す。新しい工種を足すときはこちら'],['工種を追加','マスタに新しい工種を作る（名前・単位・歩掛・標準人数・機械日額・単価・出所を入れる）'],['標準人数','歩掛りが前提にしている作業員数。現場の人数がこれと違えば日数が人数比で変わる'],['実績','その工種の実績点の一覧（消せる）'],['保存して工程・予算に反映','表の変更を保存し、全案件の日数・予算を計算し直す。数字を直すとボタンが赤く点滅する＝まだ反映されていない合図'],['×','その工種をマスタから消す']]},
- bud:{t:'③ 実行予算：見積の前に積み上げる「実行予定予算」',p:'1．設計書の工種（直接工事費）、2．設計書にない任意項目、3．経費と粗利 の順に積み上げます。歩掛りは2段階で、ATLUSの人工があればATLUS、無ければ標準積算（実績があれば実績の中央値）。現場管理費＝法定福利費（見積書の労務費×16%）＋建退共（延べ人数×320円）、諸経費＝直接工事費×％（調整しろ）、安全衛生経費＝見積書の労務費×10%（諸経費の内数）。16%・10%は見積書に出す値なので、粗利込みの労務費に掛けます。直接工事費は原価÷(1－粗利率)。ここの直接工事費・現場管理費・諸経費が同じ数字のまま ④ 見積 に並びます。',
+ bud:{t:'③ 実行予算：見積の前に積み上げる「実行予定予算」',p:'1．設計書の工種（直接工事費）、2．設計書にない任意項目、3．経費と粗利 の順に積み上げます。歩掛りは2段階で、ATLUSの人工があればATLUS、無ければ標準積算（実績があれば実績の中央値）。現場管理費＝法定福利費（見積書の労務費×16%）＋建退共（延べ人数×320円×加入率80%）、諸経費＝直接工事費×％（調整しろ）、安全衛生経費＝見積書の労務費×10%（諸経費の内数）。16%・10%は見積書に出す値なので、粗利込みの労務費に掛けます。直接工事費は原価÷(1－粗利率)。最後に万円未満を切り捨てた額が実行予定予算で、④ 見積 の工事金額と同じになります。',
   b:[['工種・数量を直す','①設計書に戻る'],['人数（入力欄）','この工種に付ける作業員数。変えると日数と原価が変わる'],['歩掛りの出所','ATLUSの人工がある工種だけ、ATLUSと標準積算を切り替えられる'],['項目を追加','設計書にない項目を1行足す（直人・材料費・機械費）'],['入れ忘れていませんか？','まだ入っていない項目の候補。押すと表に足す。×はこの案件では不要の印'],['粗利（％）','見積に出す直接工事費に対する粗利の割合。35%なら 原価÷0.65 が直接工事費になる'],['→ ④ 見積へ','次の画面へ']]},
- est:{t:'④ 見積：発注者に出す金額',p:'既定は「実行予算から積み上げ」で、③ 実行予算と同じ直接工事費・現場管理費・諸経費を並べ、最後に万円未満を切り捨てた額が工事金額。ほかに「見積単価×数量＋率」と、取込元の見積書がある案件では「取込元の見積書どおり」を選べます。',
-  b:[['見積の組み方','実行予算から積み上げ／見積単価×数量＋率／取込元の見積書どおり'],['採用','その行の見積単価をATLUSの官単価にする（見積単価×数量のとき）'],['全行を官単価にする','全部の行を官単価に置き換える'],['見積単価（入力欄）','手で上書き。空欄に戻すとマスタの単価'],['印刷','ブラウザ印刷（PDF保存も可）'],['← ③ 実行予算','前の画面へ'],['→ ⑤ 計画工程へ','次の画面へ']]},
+ est:{t:'④ 見積：発注者に出す金額',p:'③ 実行予算と同じ数字を、扇屋の見積書（本工事費表）の並びで出します。金額を変えるときは ③ で粗利か諸経費の％を動かします。取り込んだ見積書がある案件は、その工事金額を参考として表示します。',
+  b:[['印刷','ブラウザ印刷（PDF保存も可）'],['← ③ 実行予算','前の画面へ'],['→ ⑤ 計画工程へ','次の画面へ']]},
  board:{t:'⑤ 計画工程：監督ごとの帯と、日ごとの必要人数',p:'一番上の「人員合計」が日ごとの必要人数で、総人員（データ・設定）を超える日は赤。監督の行は受け持つ現場の帯で、同時現場数の上限を超える日は赤帯。帯をクリックすると案件の編集。「配置を最適化」は納期順に、総人員と同時現場数を守りながら評点の低い監督・日程を選びます。',
   b:[['◀ 今日 ▶','表示期間を動かす'],['8週／半年','表示幅'],['見込み案件も含める','見込み状態の案件を帯に出すかどうか'],['配置を最適化','全案件の担当監督と日程を自動で決め直す。固定にチェックした工種は動かさない。前に「データ・設定」の文字列を控えておくと戻せる']]},
  act:{t:'⑥ 実施工程：計画と実績を並べ、歩掛を育てる',p:'工種ごとに実際の開始〜終了、かかった班日、出来高数量を入れます。上の灰色が計画、下の青が実績。',
@@ -1448,6 +1462,9 @@ function openData(){
       <label class="f">休日<select id="dHol">${[['sat-sun','土日休み'],['sun','日曜のみ休み'],['none','休みなし']].map(([v,l])=>`<option value="${v}"${S.holiday===v?' selected':''}>${l}</option>`).join('')}</select></label>
     </div>
     <p class="note">体制＝監督が現場ごとに人数を決めて配置する。工程は「人数で割った日数」、原価は「人日×人日単価」、配置の制約は「総人員」と「監督の同時現場数」。人日単価は給与÷稼働日＋法定福利＋日当等の実額で（初期値28,000円は仮置き）。</p>
+    <div style="margin:10px 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px"><strong>案件を選んで消す</strong>
+      <div style="max-height:180px;overflow:auto;margin:6px 0">${[...S.jobs].sort((a,b)=>String(b.no||'').localeCompare(String(a.no||''))).map(j=>`<label class="chk" style="display:block"><input type="checkbox" data-dj="${j.id}">${esc(jl(j))}（${esc(j.status)}）</label>`).join('')||'<span class="u">案件はありません。</span>'}</div>
+      <button type="button" class="btn danger" id="dDelSel">チェックした案件を消す</button><span class="u">　歩掛り・設定・ほかの案件は残ります。</span></div>
     <p class="note">データはこの端末のブラウザに保存されます。別の端末へ移すときは下の文字列をコピーし、移し先で貼り付けて「読み込む」を押してください。</p>
     <textarea class="code" id="dJson" aria-label="データ">${esc(JSON.stringify(S,null,1))}</textarea>
   </div>
@@ -1462,6 +1479,8 @@ function openData(){
   };
   f.querySelector('#dClose').onclick=()=>$('dlg').close();
   f.querySelector('#dReset').onclick=()=>{ if(confirm('案件をすべて削除します（歩掛りマスタ・班・監督・配置ルール・ATLUS対応表は残ります）。戻せません。')){S.jobs=[];save();$('dlg').close();render()} };
+  f.querySelector('#dDelSel').onclick=()=>{ const ids=[...f.querySelectorAll('[data-dj]:checked')].map(x=>x.dataset.dj); if(!ids.length){alert('消す案件にチェックを入れてください。');return}
+    const names=S.jobs.filter(j=>ids.includes(j.id)).map(jl); if(confirm(`次の ${ids.length}件を削除します。戻せません。\n\n${names.join('\n')}`)){S.jobs=S.jobs.filter(j=>!ids.includes(j.id));save();$('dlg').close();render()} };
   f.querySelector('#dImport').onclick=()=>{ try{const x=JSON.parse(f.querySelector('#dJson').value); if(!Array.isArray(x.jobs)) throw 0; S=x; if(!S.bugakari) S.bugakari=sampleMaster(); if(!S.holiday) S.holiday='sun'; migrate(); applyAll(); save(); $('dlg').close(); render()}catch(e){alert('読み込めませんでした。コピーした文字列が途中で切れていないか確認してください。')} };
   f.querySelector('#df').onsubmit=()=>{
     const sp=f.querySelector('#dSups').value.split(/[,、]/).map(s=>s.trim()).filter(Boolean);
@@ -1555,14 +1574,14 @@ function wsEstimate(j,T){
 // --- 実行予算書
 function wsBudget(j,T){
   const BR=budgetRows(j), B=budTotals(j,BR), P=S.bud, md0=S.manDay||28000, p1=v=>Math.round(v*1000)/10;
-  const H=['工種','数量','単位','歩掛りの出所','標準人数','人数','日数','人日','人日単価','人件費','機械・車両/日','機械・車両','材料単価','材料費','原価','見積金額（粗利込み）','官 金額','官 日当り','出所'].map(h=>C(h,XS.th));
+  const H=['工種','名称・規格','数量','単位','歩掛りの出所','標準人数','人数','日数','人日','人日単価','人件費','機械・車両/日','機械・車両','材料単価','材料費','原価','見積金額（粗利込み）','官 金額','官 日当り','出所'].map(h=>C(h,XS.th));
   const E=n=>Array.from({length:n},()=>C('',XS.td));
   const rows=[[C('実行予算書（実行予定予算）',XS.title)],[C('工事名：',XS.base),C(jl(j),XS.base)],[C(`人日単価 ${yen(md0)}円／人・日　総人員 ${S.staff||20}人　作成 ${todayJ()}`,XS.note)],[],[C('1．設計書の工種（直接工事費）',XS.h2)],H];
-  BR.forEach((r,k)=>rows.push([C(r.t.kind,XS.td),D(r.q),C(r.b?.unit||'',XS.td),C(r.an?`ATLUS ${r.src.ninku}人工`:`標準積算${r.st&&r.st.n?'→実績':''} ${r.st?Math.round(r.st.rate*100)/100:''}/日`,XS.td),D(r.b?.men||0),D(r.men),D(r.days),D(r.manDays),N(md0),N(r.labor),N(r.b?.mach||0),N(r.mach),N(r.b?.matUnit||0),N(r.mat),N(r.total),N(B.rowSell[k],XS.bnum),N(r.src?.amount||0),D(r.kanDaily||0),C(r.b?.src||'',XS.td)]));
-  (j.extra||[]).forEach((e,k)=>rows.push([C(e.name+'（未対応）',XS.td),D(e.qty||0),C(e.unit||'',XS.td),...E(11),N(pf(e.cost)),N(B.exSell[k],XS.bnum),N(e.amount||0),C('',XS.td),C(pf(e.cost)?'原価を直接入力':'原価未入力',XS.td)]));
+  BR.forEach((r,k)=>rows.push([C(r.t.kind,XS.td),C(r.t.spec||'',XS.td),D(r.q),C(r.b?.unit||'',XS.td),C(r.an?`ATLUS ${r.src.ninku}人工`:`標準積算${r.st&&r.st.n?'→実績':''} ${r.st?Math.round(r.st.rate*100)/100:''}/日`,XS.td),D(r.b?.men||0),D(r.men),D(r.days),D(r.manDays),N(md0),N(r.labor),N(r.b?.mach||0),N(r.mach),N(r.b?.matUnit||0),N(r.mat),N(r.total),N(B.rowSell[k],XS.bnum),N(r.src?.amount||0),D(r.kanDaily||0),C(r.b?.src||'',XS.td)]));
+  (j.extra||[]).forEach((e,k)=>rows.push([C(e.name+'（未対応）',XS.td),C('',XS.td),D(e.qty||0),C(e.unit||'',XS.td),...E(11),N(pf(e.cost)),N(B.exSell[k],XS.bnum),N(e.amount||0),C('',XS.td),C(pf(e.cost)?'原価を直接入力':'原価未入力',XS.td)]));
   const sum=k=>BR.reduce((a,r)=>a+(r[k]||0),0), kan=BR.reduce((a,r)=>a+(r.src?.amount||0),0)+(j.extra||[]).reduce((a,e)=>a+(e.amount||0),0);
   const Bd=n=>Array.from({length:n},()=>C('',XS.bold));
-  rows.push([C('小計',XS.bold),...Bd(5),D(sum('days'),XS.bnum),D(sum('manDays'),XS.bnum),C('',XS.bold),N(sum('labor'),XS.bnum),C('',XS.bold),N(sum('mach'),XS.bnum),C('',XS.bold),N(sum('mat'),XS.bnum),N(sum('total')+B.exCost,XS.bnum),N(B.rowSell.reduce((a,v)=>a+v,0)+B.exSell.reduce((a,v)=>a+v,0),XS.bnum),N(kan,XS.bnum),C('',XS.bold),C('',XS.bold)]);
+  rows.push([C('小計',XS.bold),...Bd(6),D(sum('days'),XS.bnum),D(sum('manDays'),XS.bnum),C('',XS.bold),N(sum('labor'),XS.bnum),C('',XS.bold),N(sum('mach'),XS.bnum),C('',XS.bold),N(sum('mat'),XS.bnum),N(sum('total')+B.exCost,XS.bnum),N(B.rowSell.reduce((a,v)=>a+v,0)+B.exSell.reduce((a,v)=>a+v,0),XS.bnum),N(kan,XS.bnum),C('',XS.bold),C('',XS.bold)]);
   rows.push([]); rows.push([C('2．設計書にない項目（任意）',XS.h2)]);
   rows.push(['項目','直人（人日）','人日単価','人件費','材料費','機械費','原価 計','見積金額（粗利込み）','メモ'].map(h=>C(h,XS.th)));
   (j.opt||[]).forEach((o,k)=>{const c=optCost(o); rows.push([C(o.name||'',XS.td),D(pf(o.men)),N(md0),N(c.labor),N(c.mat),N(c.mach),N(optSum(o)),N(B.optSell[k],XS.bnum),C(o.note||'',XS.td)])});
@@ -1580,9 +1599,10 @@ function wsBudget(j,T){
   L('　建退共の掛金',`延べ ${B.manDays}人 × ${P.kentai}円 × 加入率${p1(P.kentaiRate)}%`,B.kentai);
   L('諸経費',`直接工事費 × ${p1(B.shoR)}%（調整しろ）`,B.sho,1);
   L('　うち安全衛生経費',`労務費 × ${p1(P.anzen)}%（諸経費の内数）`,B.anzen);
-  L('実行予定予算','直接工事費＋現場管理費＋諸経費',B.total,1);
+  L('計','直接工事費＋現場管理費＋諸経費',B.total);
+  L('端数調整','最後に万円未満切捨',B.hasu);
+  L('実行予定予算','＝見積の工事金額（税抜）',B.kouji,1);
   rows.push([]);
-  L('見積金額（税抜）',T.mode==='bud'?'実行予定予算を最後に万円未満切捨':T.mode==='src'?'取込元の見積書どおり':'見積単価×数量＋率',T.est,1);
   L('直接工事費の原価','',B.genka);
   L('見積 － 原価',T.est?`見積の ${p1((T.est-B.genka)/T.est)}%（粗利＋現場管理費＋諸経費）`:'',T.est-B.genka,1);
   if(j.atlas){const A=j.atlas,Tt=A.totals; const nin=(A.lmk['人件費']||[]).reduce((a,x)=>a+(x.unit==='人'?x.qty:0),0);
@@ -1592,7 +1612,7 @@ function wsBudget(j,T){
     rows.push([C(`人件費（${Math.round(nin*10)/10}人工）＋機械`,XS.td),N((Tt['人件費']||0)+(Tt['機械損料']||0)+(Tt['機械賃料']||0)),N(sum('labor')+sum('mach')),N(sum('labor')+sum('mach')-((Tt['人件費']||0)+(Tt['機械損料']||0)+(Tt['機械賃料']||0)))]);
     rows.push([C('諸雑費・補正',XS.td),N(Tt['諸雑費']||0),C('—',XS.td),C('',XS.td)]);
     rows.push([C('人日（自社）／人工（ATLUS）',XS.td),D(nin),D(sum('manDays')),D(sum('manDays')-nin)]);}
-  return mkSheet(rows,{cols:[30,12,10,22,10,6,6,7,10,12,11,11,10,12,13,14,12,9,30],landscape:true,merges:[[0,0,0,8],[1,1,1,8],[2,0,2,8]]});
+  return mkSheet(rows,{cols:[26,30,12,10,22,10,6,6,7,10,12,11,11,10,12,13,14,12,9,30],landscape:true,merges:[[0,0,0,8],[1,1,1,8],[2,0,2,8]]});
 }
 // --- 工程表（1案件）：日付を横に。計画＝灰、実績＝青
 function wsGantt(j){
@@ -1606,7 +1626,7 @@ function wsGantt(j){
   days.forEach(n=>{const d=new Date(n*DAY); mrow.push(C(d.getUTCDate()===1||n===d0?`${d.getUTCMonth()+1}月`:'',XS.th)); drow.push(C(d.getUTCDate(),XS.th)); wrow.push(C(WD[dow(n)],isHol(n)?{...XS.th,fill:{fgColor:{rgb:'F4CCCC'}}}:XS.th));});
   const rows=[head1,[],mrow,drow,wrow];
   const BR=budgetRows(j);
-  BR.forEach(r=>{const t=r.t; const line=[C(t.kind,XS.td),C(t.crew||j.sup||'',XS.td),D(r.men),C(r.q?`${fmt(r.q)}${r.b?.unit||''}`:'',XS.td),C(t.start&&t.end?`${md(toN(t.start))}〜${md(toN(t.end))}`:'',XS.td),C(t.aStart&&t.aEnd?`${md(toN(t.aStart))}〜${md(toN(t.aEnd))}`:'',XS.td),D(r.days)];
+  BR.forEach(r=>{const t=r.t; const line=[C(tl(t),XS.td),C(t.crew||j.sup||'',XS.td),D(r.men),C(r.q?`${fmt(r.q)}${r.b?.unit||''}`:'',XS.td),C(t.start&&t.end?`${md(toN(t.start))}〜${md(toN(t.end))}`:'',XS.td),C(t.aStart&&t.aEnd?`${md(toN(t.aStart))}〜${md(toN(t.aEnd))}`:'',XS.td),D(r.days)];
     const ps=t.start?toN(t.start):null, pe=t.end?toN(t.end):null, as=t.aStart?toN(t.aStart):null, ae=t.aEnd?toN(t.aEnd):null;
     days.forEach(n=>{ if(as!==null&&ae!==null&&n>=as&&n<=ae&&!isHol(n)) line.push(C('実',XS.act)); else if(ps!==null&&pe!==null&&n>=ps&&n<=pe&&!isHol(n)) line.push(C('',XS.plan)); else line.push(C('',isHol(n)?XS.we:XS.cell)); });
     rows.push(line);});
@@ -1637,7 +1657,7 @@ function wsAllGantt(jobs,d0,d1){
   days.forEach(n=>{const d=new Date(n*DAY); mrow.push(C(d.getUTCDate()===1||n===d0?`${d.getUTCMonth()+1}月`:'',XS.th)); drow.push(C(d.getUTCDate(),XS.th)); wrow.push(C(WD[dow(n)],isHol(n)?{...XS.th,fill:{fgColor:{rgb:'F4CCCC'}}}:XS.th));});
   const rows=[[C(`全案件工程表　${toS(d0)} 〜 ${toS(d1)}`,XS.h2)],[],mrow,drow,wrow];
   jobs.forEach(j=>j.tasks.forEach(t=>{ if(!(t.start&&t.end)) return;
-    const line=[C(jl(j),XS.td),C(t.kind,XS.td),C(t.crew||j.sup||'',XS.td),D(menOf(t)),C(`${md(toN(t.start))}〜${md(toN(t.end))}`,XS.td)];
+    const line=[C(jl(j),XS.td),C(tl(t),XS.td),C(t.crew||j.sup||'',XS.td),D(menOf(t)),C(`${md(toN(t.start))}〜${md(toN(t.end))}`,XS.td)];
     const ps=toN(t.start),pe=toN(t.end); days.forEach(n=>line.push(C('',n>=ps&&n<=pe&&!isHol(n)?XS.plan:(isHol(n)?XS.we:XS.cell)))); rows.push(line);}));
   const mline=[C('人数合計',XS.bold),C('',XS.bold),C('',XS.bold),C('',XS.bold),C('',XS.bold)];
   days.forEach(n=>{let m=0; jobs.forEach(j=>j.tasks.forEach(t=>{if(t.start&&t.end&&n>=toN(t.start)&&n<=toN(t.end)&&!isHol(n)) m+=menOf(t)})); const cap=S.staff||20; mline.push(m?D(m,m>cap?XS.over:XS.dec):C('',isHol(n)?XS.we:XS.cell));});
@@ -1646,10 +1666,10 @@ function wsAllGantt(jobs,d0,d1){
 }
 // --- CSV（フラット）
 function csvRows(jobs){
-  const H=['工事番号','工事名','発注者','場所','状態','主担当','納期','難易度','距離','工種','数量','単位','人数','日数','人日','見積単価','見積金額','人件費','機械車両','材料費','実行予算','担当監督','計画開始','計画終了','実績開始','実績終了','実績人数','実績日数','出来高','官金額','施工班'];
+  const H=['工事番号','工事名','発注者','場所','状態','主担当','納期','難易度','距離','工種','数量','単位','人数','日数','人日','見積単価','見積金額','人件費','機械車両','材料費','実行予算','担当監督','計画開始','計画終了','実績開始','実績終了','実績人数','実績日数','出来高','官金額','施工班','名称・規格'];
   const out=[H];
   jobs.forEach(j=>{const BR=budgetRows(j), TT=estTotals(j), ER=TT.rows;
-    BR.forEach((r,k)=>{const t=r.t,e=ER[k]; out.push([j.no||'',j.name,j.client||'',j.place||'',j.status,j.sup||'',j.due||'',j.diff||'',j.dist||'',t.kind,r.q,r.b?.unit||'',r.men,r.days,r.manDays,Math.round(e?.price||0),Math.round(e?.amt||0),Math.round(r.labor),Math.round(r.mach),Math.round(r.mat),Math.round(r.total),t.crew||'',t.start||'',t.end||'',t.aStart||'',t.aEnd||'',t.aMen||'',t.aDays||'',t.aQty||'',r.src?.amount||'',t.han||''])});
+    BR.forEach((r,k)=>{const t=r.t,e=ER[k]; out.push([j.no||'',j.name,j.client||'',j.place||'',j.status,j.sup||'',j.due||'',j.diff||'',j.dist||'',t.kind,r.q,r.b?.unit||'',r.men,r.days,r.manDays,Math.round(e?.price||0),Math.round(e?.amt||0),Math.round(r.labor),Math.round(r.mach),Math.round(r.mat),Math.round(r.total),t.crew||'',t.start||'',t.end||'',t.aStart||'',t.aEnd||'',t.aMen||'',t.aDays||'',t.aQty||'',r.src?.amount||'',t.han||'',t.spec||''])});
     TT.optRows.forEach(x=>{const c=optCost(x.o); out.push([j.no||'',j.name,j.client||'',j.place||'',j.status,j.sup||'',j.due||'',j.diff||'',j.dist||'',(x.o.name||'')+'（設計書外）',1,'式','','',pf(x.o.men),Math.round(x.amt),Math.round(x.amt),Math.round(c.labor),Math.round(c.mach),Math.round(c.mat),Math.round(x.cost),'','','','','','','','','',''])});
     (j.extra||[]).forEach((e,k)=>out.push([j.no||'',j.name,j.client||'',j.place||'',j.status,j.sup||'',j.due||'',j.diff||'',j.dist||'',e.name+'（未対応）',e.qty||'',e.unit||'','','','','',Math.round(TT.exAmt[k]),'','','',Math.round(pf(e.cost)),'','','','','','','','',e.amount||'','']));});
   return out;
@@ -1726,7 +1746,7 @@ function wsEstimate2(j,T){
     return r+2;};
   head(14); let r=15;
   const BR=budgetRows(j);
-  T.rows.forEach((x,k)=>{const b=BR[k]; const sub=x.t.src?.rows?.length?x.t.src.rows.map(y=>y.name).join('／'):''; const note=T.mode==='bud'?'':(x.ov?'':'自社単価')+(b?.kanPrice?(x.ov?'':'／')+'官 '+yen(b.kanPrice):'');
+  T.rows.forEach((x,k)=>{const b=BR[k]; const sub=x.t.spec||(x.t.src?.rows?.length?x.t.src.rows.map(y=>y.name).join('／'):''); const note=T.mode==='bud'?'':(x.ov?'':'自社単価')+(b?.kanPrice?(x.ov?'':'／')+'官 '+yen(b.kanPrice):'');
     r=item(r,x.t.kind,sub,x.q,x.b?.unit||'',Math.round(x.price),Math.round(x.amt),note)});
   T.optRows.forEach(x=>{r=item(r,x.o.name||'（名称なし）','',1,'式',x.amt,x.amt,'')});
   (j.extra||[]).forEach((e,k)=>{const a=T.exAmt[k]; r=item(r,e.name,'',e.qty||1,e.unit||'式',Math.round(a/(e.qty||1)),Math.round(a),T.mode==='bud'?'':'取込金額（自社工種に未対応）')});
