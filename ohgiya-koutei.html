@@ -160,7 +160,7 @@ textarea.code{width:100%;min-height:200px;font-family:ui-monospace,Menlo,Consola
 <dialog id="dlg"></dialog>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<datalist id="kinds"></datalist>
+<datalist id="kinds"></datalist><datalist id="vendors"></datalist><datalist id="clients"></datalist>
 
 <script>
 (function(){
@@ -288,7 +288,7 @@ const supRank=p=>(S.supRank?.[p])||'竹';
 const rule=(rank,diff)=>(S.rules?.[rank]?.[diff])||{use:'可',k:1};
 // 歩掛係数：班が決まっていれば その班のランク×現場難易度 の係数。未定なら1
 // 単位が「日」の工種（準備工・片付け・外構工など日数指定のもの）には係数を掛けない
-const kOf=(t,j)=>1; // v3.7：ランク×難易度の係数は廃止（日数は歩掛×人数だけで決まる）
+const kOf=(t,j)=>1; // v3.8：ランク×難易度の係数は廃止（日数は歩掛×人数だけで決まる）
 const canDo=(sup,diff)=>{const d=S.supDiff?.[sup]; return d?d[diff||'B']!==false:true}; // 監督がその難易度の現場を担当できるか
 const menOf=t=>{const b=bk(t.kind); const m=parseFloat(t.men); return m>0?m:(b?.men||4)};
 const menRatio=t=>{const b=bk(t.kind); if(!b||b.unit==='日') return 1; return menOf(t)/(b.men||4)};
@@ -328,7 +328,7 @@ function migrate(){
   if(!S.weights) S.weights={due:10,early:2,dist:2,waste:3,level:1}; if(S.weights.early===undefined) S.weights.early=2;
   if(!S.est) S.est={keihi:0.10,houtei:0.05,kanri:0.30,rieki:0.08,tax:0.10};
   if(!S.crewSize) S.crewSize=4;
-  // v3.7：施工班を廃止し「監督＝班」。監督が現場ごとに人数を決める体制に合わせる
+  // v3.8：施工班を廃止し「監督＝班」。監督が現場ごとに人数を決める体制に合わせる
   if(!S.staffModel){
     const old=S.crews||[]; S.crews=S.sups.slice();
     const map={}; old.forEach((c,i)=>{map[c]=S.sups[i]||''});
@@ -343,6 +343,7 @@ function migrate(){
   if(!S.supDiff){S.supDiff={}; S.sups.forEach(p=>{const ranks=Object.values(S.crewRank?.[p]||{}); const weak=ranks.length&&ranks.every(r=>r==='梅'); S.supDiff[p]={A:!weak,B:true,C:true}});}
   S.sups.forEach(p=>{if(!S.supDiff[p]) S.supDiff[p]={A:true,B:true,C:true}});
   if(!S.policy) S.policy='due';
+  if(!S.dezura) S.dezura={};
   if(!S.satWork){S.holiday='sun'; S.satWork=true;} // 2026-11-20 土曜は基本稼働（日曜のみ休み）に統一
   S.jobs.forEach(j=>{if(j.startPlan===undefined) j.startPlan='';});
 }
@@ -468,7 +469,7 @@ function renderJobs(){
   if(!js.length){$('main').innerHTML=`<div class="mst wide">${bar}<p class="empty">${F}の案件はありません。</p></div>`;bind();return}
   $('main').innerHTML=`<div class="mst wide">${bar}
     <div class="ttw"><table class="tt" style="min-width:1000px"><thead><tr><th>番号</th><th>工事名</th><th>発注者／場所</th><th>状態</th><th>監督</th><th>着手予定</th><th>工程</th><th>納期</th><th class="num">見積</th><th class="num">実行予算</th><th class="num">粗利</th><th></th></tr></thead><tbody>
-    ${js.map(j=>{const sp=span(j),T=estTotals(j),g=T.est-T.bud;return `<tr style="border-left:4px solid ${jc(j)}">
+    ${js.map(j=>{const sp=span(j),T=estTotals(j);return `<tr style="border-left:4px solid ${jc(j)}">
       <td><input type="text" value="${esc(j.no||'')}" data-no="${j.id}" placeholder="${esc(nextNo()||'49-001')}" style="width:80px" aria-label="工事番号"></td>
       <td><a href="#" data-open="${j.id}"><strong>${esc(j.name)}</strong></a>${j.atlas?' <span class="u">ATLUS</span>':''}<span class="u" style="display:block">${j.tasks.length}工種${j.extra?.length?'＋未対応'+j.extra.length:''}</span></td>
       <td class="u">${esc(j.client||'—')}<span style="display:block">${esc(j.place||'')}</span></td>
@@ -477,7 +478,7 @@ function renderJobs(){
       <td><input type="date" value="${esc(j.startPlan||'')}" data-sp="${j.id}" aria-label="着手予定" style="width:130px"></td>
       <td class="u">${sp?`${md(sp[0])}〜${md(sp[1])}`:'—'}</td>
       <td class="u">${j.due?md(toN(j.due)):'—'}${j.due&&sp&&sp[1]>toN(j.due)?' <span class="warn">超過</span>':''}</td>
-      <td class="num">${yen(T.est)}</td><td class="num">${yen(T.bud)}</td><td class="num ${g<0?'warn':''}">${yen(g)}</td>
+      <td class="num">${yen(T.est)}</td><td class="num">${yen(T.bud)}</td><td class="num ${T.est-T.bud<0?'warn':''}">${yen(T.est-T.bud)}</td>
       <td style="white-space:nowrap"><button class="btn" data-open="${j.id}">開く</button> <button class="btn" data-job="${j.id}">編集</button> <button class="btn" data-dup="${j.id}">複製</button> <button class="btn danger" data-rm="${j.id}">削除</button></td></tr>`}).join('')}
     </tbody></table></div></div>`;
   bind();
@@ -652,7 +653,7 @@ function renderDesign(){
     <div class="fg">
       <label class="f">工事番号<input id="fNo" value="${esc(j.no||'')}" placeholder="${esc(nextNo()||'49-001')}" style="width:90px"></label>
       <label class="f">工事名<input id="fName" value="${esc(j.name)}" style="min-width:260px"></label>
-      <label class="f">発注者<input id="fClient" value="${esc(j.client||'')}"></label>
+      <label class="f">発注者<input id="fClient" list="clients" value="${esc(j.client||'')}"></label>
       <label class="f">場所<input id="fPlace" value="${esc(j.place||'')}"></label>
       <label class="f">状態<select id="fStatus">${['見込み','受注','完了'].map(x=>`<option${j.status===x?' selected':''}>${x}</option>`).join('')}</select></label>
       <label class="f">難易度<select id="fDiff">${GRADES.map(g=>`<option${j.diff===g?' selected':''}>${g}</option>`).join('')}</select></label>
@@ -687,7 +688,7 @@ function renderDesign(){
 // ---------- ⑥ 実施工程（計画と実績） ----------
 function renderActual(){
   const j=curJob(); if(!j){$('main').innerHTML='<p class="empty">案件がありません。</p>';return}
-  const rows=budgetRows(j);
+  const rows=budgetRows(j), dzj=dezuraOf(j);
   const dates=[...j.tasks.map(t=>[t.start,t.end,t.aStart,t.aEnd]).flat()].filter(Boolean).map(toN);
   const d0=dates.length?Math.min(...dates):today(), d1=dates.length?Math.max(...dates):today()+30, span=Math.max(14,d1-d0+3);
   const pct=(a,b)=>`left:${((toN(a)-d0)/span*100).toFixed(1)}%;width:${Math.max(0.8,(toN(b)-toN(a)+1)/span*100).toFixed(1)}%`;
@@ -697,7 +698,7 @@ function renderActual(){
       <td class="num">${r.q?fmt(r.q)+esc(r.b?.unit||''):'—'}</td>
       <td class="u">${t.start?md(toN(t.start)):''}〜${t.end?md(toN(t.end)):''}<span style="display:block">${pd?pd+'日':''}</span></td>
       <td><input type="date" class="as" value="${esc(t.aStart||'')}" aria-label="実績開始"> 〜 <input type="date" class="ae" value="${esc(t.aEnd||'')}" aria-label="実績終了"></td>
-      <td class="num"><input type="number" min="1" step="1" class="am" value="${esc(t.aMen??'')}" style="width:56px;text-align:right" aria-label="実績人数" placeholder="${menOf(t)}"></td>
+      <td class="num"><input type="number" min="0.5" step="0.1" class="am" value="${esc(t.aMen??'')}" style="width:62px;text-align:right" aria-label="実績人数" placeholder="${menOf(t)}">${t.aSrc?`<span class="u" style="display:block">${esc(t.aSrc)}</span>`:''}</td>
       <td class="num"><input type="number" step="any" min="0" class="ad" value="${esc(t.aDays??ad)}" style="width:80px;text-align:right" aria-label="実績日数" placeholder="${ad}"></td>
       <td class="num"><input type="number" step="any" min="0" class="aq" value="${esc(t.aQty??'')}" style="width:90px;text-align:right" aria-label="出来高数量" placeholder="${esc(t.qty??'')}"></td>
       <td class="num ${t.aDays&&pd&&t.aDays>pd?'warn':''}">${t.aDays&&pd?((t.aDays>pd?'+':'')+(t.aDays-pd)+'日'):''}</td>
@@ -708,21 +709,23 @@ function renderActual(){
       </div></td></tr>`}).join('');
   const done=j.tasks.filter(t=>t.aEnd).length;
   $('main').innerHTML=`<div class="mst wide">
-    <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">計画 ${rows.reduce((a,r)=>a+(r.days||0),0)}日・${rows.reduce((a,r)=>a+(r.manDays||0),0)}人日 ／ 実績入力 ${done}/${j.tasks.length}工種</span><span style="flex:1"></span><button class="btn" id="aXls" title="この案件の工程表（計画・実績）をExcelに">📄 工程表をExcelに</button><button class="btn" id="aBoard">← ⑤ 計画工程</button></div>
-<p class="note">工種ごとに「実際の開始〜終了」「実際の人数」「実際にかかった日数」「出来高数量」を入れます。上の灰色が計画、下の青が実績。「歩掛に反映」で、人日に直した実績（標準人数換算）がその工種の実績点になり、採用値が中央値に更新されます（② 歩掛り）。</p>
+    <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">計画 ${rows.reduce((a,r)=>a+(r.days||0),0)}日・${rows.reduce((a,r)=>a+(r.manDays||0),0)}人日 ／ 実績入力 ${done}/${j.tasks.length}工種${dzj.ninku?` ／ <strong>出面 ${fmt(dzj.ninku)}人日</strong>（${Object.keys(dzj.byDay).length}日・${dzj.months.join(',')}）`:''}</span><span style="flex:1"></span><button class="btn" id="aDz" title="出面スプレッドシートから現場ごとの日別人数を読む">📥 出面を読む</button>${dzj.ninku?'<button class="btn primary" id="aDzApply" title="出面の日別人数を、工種の計画期間で按分して実績（開始・終了・人数・日数）に入れる">出面から実績を入れる</button>':''}<button class="btn" id="aXls" title="この案件の工程表（計画・実績）をExcelに">📄 工程表をExcelに</button><button class="btn" id="aBoard">← ⑤ 計画工程</button></div>
+${dzj.ninku?`<p class="note">出面（現場コード ${esc(j.no)}）：${Object.entries(dzj.byDay).sort().map(([d,m])=>`${md(toN(d))} ${fmt(m)}人`).join('　')}</p>`:(j.no?'':'<p class="note warn">工事番号が未設定です。出面は工事番号（現場コード）で結びつけるので、① 設計書で番号を入れてください。</p>')}
+<p class="note">工種ごとに「実際の開始〜終了」「実際の人数」「実際にかかった日数」「出来高数量」を入れます。出面を読み込めば、人数と日数は出面から入れられます。上の灰色が計画、下の青が実績。「歩掛に反映」で、人日に直した実績（標準人数換算）がその工種の実績点になり、採用値が中央値に更新されます（② 歩掛り）。</p>
     <div class="ttw"><table class="tt" style="min-width:1100px"><thead><tr><th>工種／班</th><th class="num">設計数量</th><th>計画</th><th>実績 開始〜終了</th><th class="num">実績 人数</th><th class="num">実績 日数</th><th class="num">出来高</th><th class="num">差</th><th></th><th>計画／実績</th></tr></thead><tbody>${tr}</tbody></table></div>
     <div class="bar" style="margin-top:8px"><button class="btn" id="aDone">この案件を完了にする</button></div>
   </div>`;
   const read=tr0=>{const t=j.tasks[+tr0.dataset.k]; t.aStart=tr0.querySelector('.as').value; t.aEnd=tr0.querySelector('.ae').value;
     const ad=parseFloat(tr0.querySelector('.ad').value); t.aDays=isFinite(ad)?ad:(t.aStart&&t.aEnd?wdays(toN(t.aStart),toN(t.aEnd)):null);
-    const aq=parseFloat(tr0.querySelector('.aq').value); t.aQty=isFinite(aq)?aq:null; const am=parseInt(tr0.querySelector('.am').value); t.aMen=am>0?am:null;};
+    const aq=parseFloat(tr0.querySelector('.aq').value); t.aQty=isFinite(aq)?aq:null; const am=parseFloat(tr0.querySelector('.am').value); if(t.aSrc&&am!==t.aMen) t.aSrc='出面（手修正）'; t.aMen=am>0?am:null;};
   document.querySelectorAll('tr[data-k]').forEach(tr0=>tr0.querySelectorAll('input').forEach(i=>i.onchange=()=>{read(tr0);save();renderActual()}));
   document.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>{const k=+b.dataset.rec,t=j.tasks[k],bm=bk(t.kind); if(!bm) return;
     const q=parseFloat(t.aQty)||parseFloat(t.qty), d0=parseFloat(t.aDays), m=t.aMen||menOf(t); if(!(q>0&&d0>0)) return;
     const d=d0*m/(bm.men||4); // 標準人数換算の日数（人日で正規化）
     bm.actuals=(bm.actuals||[]).filter(a=>a.tid!==t.id); bm.actuals.push({tid:t.id,date:toS(today()),job:j.name,qty:q,days:Math.round(d*100)/100,men:m,rawDays:d0,tags:j.tags||[]});
     applyAll();save();renderActual();});
-  $('aBoard').onclick=()=>goTab('board'); $('aXls').onclick=()=>exportOne('gantt');
+  $('aBoard').onclick=()=>goTab('board'); $('aXls').onclick=()=>exportOne('gantt'); $('aDz').onclick=openDezura;
+  if($('aDzApply')) $('aDzApply').onclick=()=>{ if(j.tasks.some(t=>t.aStart)&&!confirm('すでに入っている実績（開始・終了・人数・日数）を、出面から計算した値で上書きします。出来高数量は変えません。')) return; const n=applyDezura(j); save(); renderActual(); $('alerts').style.display='';$('alerts').className='ok';$('alerts').textContent=`出面から ${n} 工種の実績を入れました（現場の日別人数を工種の計画期間で按分）。出来高数量を確認して「歩掛に反映」を押すと歩掛が更新されます。`};
   $('aDone').onclick=()=>{j.status='完了';save();render()};
 }
 
@@ -1114,7 +1117,7 @@ const HELP={
  board:{t:'⑤ 計画工程：監督ごとの帯と、日ごとの必要人数',p:'一番上の「人員合計」が日ごとの必要人数で、総人員（データ・設定）を超える日は赤。監督の行は受け持つ現場の帯で、同時現場数の上限を超える日は赤帯。帯をクリックすると案件の編集。「配置を最適化」は納期順に、総人員と同時現場数を守りながら評点の低い監督・日程を選びます。',
   b:[['◀ 今日 ▶','表示期間を動かす'],['8週／半年','表示幅'],['見込み案件も含める','見込み状態の案件を帯に出すかどうか'],['配置を最適化','全案件の担当監督と日程を自動で決め直す。固定にチェックした工種は動かさない。前に「データ・設定」の文字列を控えておくと戻せる']]},
  act:{t:'⑥ 実施工程：計画と実績を並べ、歩掛を育てる',p:'工種ごとに実際の開始〜終了、かかった班日、出来高数量を入れます。上の灰色が計画、下の青が実績。',
-  b:[['歩掛に反映','その工種の実績（出来高と人日）を②の実績点に追加。採用値が中央値に更新される'],['この案件を完了にする','状態を完了にして工程・配置から外す（案件一覧の「完了」に残る）'],['← ⑤ 計画工程','前の画面へ']]},
+  b:[['出面を読む','出面スプレッドシート（またはそのExcel）から、現場コード＝工事番号ごとの日別人数を読む'],['出面から実績を入れる','出面の日別人数を工種の計画期間で按分し、開始・終了・人数・日数を自動で入れる（出来高数量は手入力）'],['歩掛に反映','その工種の実績（出来高と人日）を②の実績点に追加。採用値が中央値に更新される'],['この案件を完了にする','状態を完了にして工程・配置から外す（案件一覧の「完了」に残る）'],['← ⑤ 計画工程','前の画面へ']]},
  jobs:{t:'案件一覧：案件の管理',p:'番号・状態はこの表で直接変えられます。工事番号は「期-連番」（例 49-014）で、空欄なら次の番号を提案します。',
   b:[['進行中／見込み／受注／完了／すべて','絞り込み'],['開く','その案件を選んで①設計書へ'],['編集','日付・班の詳細編集を開く'],['複製','同じ工種構成で新しい案件を作る（見込み・実績なし）'],['削除','案件を消す（戻せない）'],['見本案件を入れる','練習用の5案件を追加'],['案件を追加','手入力で新規']]},
  rule:{t:'配置ルール：誰がどの難易度の現場を持てるか、と優先方針',p:'監督ごとに担当できる難易度（A難・B・C易）にチェック。それと方針（納期を守る／主担当で続ける／人を平らに使う）だけ。日数の係数や松竹梅はやめました。日数は歩掛×人数だけで決まります。',
@@ -1132,6 +1135,7 @@ function renderHelp(){
 function curJob(){ if(!S.jobs.length) return null; if(!S.jobs.find(j=>j.id===V.bud)) V.bud=S.jobs[0].id; return S.jobs.find(j=>j.id===V.bud); }
 function render(){
   $('kinds').innerHTML=S.bugakari.map(b=>`<option>${esc(b.kind)}</option>`).join('');
+  $('clients').innerHTML=[...new Set(S.jobs.map(j=>j.client).filter(Boolean))].map(c=>`<option>${esc(c)}</option>`).join('');
   const j=curJob();
   $('gJob').innerHTML=[...S.jobs].sort((a,b)=>String(b.no).localeCompare(String(a.no))).map(x=>`<option value="${x.id}"${j&&x.id===j.id?' selected':''}>${esc(jl(x))}（${esc(x.status)}）</option>`).join('')||'<option value="">（案件なし）</option>';
   const perJob=['design','est','bud','act','mst'].includes(V.tab);
@@ -1200,7 +1204,7 @@ function drawEdit(){
     <div class="fg">
       <label class="f">工事番号<input id="fNo" value="${esc(draft.no||'')}" placeholder="${esc(nextNo()||'49-001')}" style="width:90px"></label>
       <label class="f">案件名<input id="fName" value="${esc(draft.name)}" required></label>
-      <label class="f">発注者・元請<input id="fClient" value="${esc(draft.client)}"></label>
+      <label class="f">発注者・元請<input id="fClient" list="clients" value="${esc(draft.client)}"></label>
       <label class="f">場所<input id="fPlace" value="${esc(draft.place)}"></label>
       <label class="f">状態<select id="fStatus">${['受注','見込み','完了'].map(x=>`<option${draft.status===x?' selected':''}>${x}</option>`).join('')}</select></label>
       <label class="f">主担当の監督<select id="fSup">${opts(S.sups,draft.sup,'未定')}</select></label>
@@ -1281,6 +1285,8 @@ function openData(){
       <label class="f">総人員（作業員の人数）<input id="dStaff" type="number" min="1" value="${S.staff||20}"></label>
       <label class="f">人日単価（円／人・日）<input id="dManDay" type="number" min="0" step="500" value="${S.manDay||28000}"></label>
       <label class="f">監督1人の同時担当現場数<input id="dSupCap" type="number" min="1" value="${S.supCap}"></label>
+      <label class="f">出面スプレッドシートのURL（Apps ScriptのウェブアプリURL）<input id="dDzUrl" value="${esc(S.dezuraUrl||'')}" placeholder="https://script.google.com/macros/s/…/exec" style="min-width:380px"></label>
+      <label class="f">合言葉（Code.gs の TOKEN と同じ。空でも可）<input id="dDzTok" value="${esc(S.dezuraToken||'')}" style="width:140px"></label>
       <label class="f">休日<select id="dHol">${[['sat-sun','土日休み'],['sun','日曜のみ休み'],['none','休みなし']].map(([v,l])=>`<option value="${v}"${S.holiday===v?' selected':''}>${l}</option>`).join('')}</select></label>
     </div>
     <p class="note">体制＝監督が現場ごとに人数を決めて配置する。工程は「人数で割った日数」、原価は「人日×人日単価」、配置の制約は「総人員」と「監督の同時現場数」。人日単価は給与÷稼働日＋法定福利＋日当等の実額で（初期値28,000円は仮置き）。</p>
@@ -1303,7 +1309,7 @@ function openData(){
     const sp=f.querySelector('#dSups').value.split(/[,、]/).map(s=>s.trim()).filter(Boolean);
     rename(S.sups,sp,'sup'); rename(S.sups,sp,'crew');
     const cr={}; sp.forEach((n,i)=>{cr[n]=S.crewRank[S.sups[i]]||S.crewRank[n]||{}}); S.crewRank=cr;
-    S.sups=sp; S.crews=sp; S.supCap=Math.max(1,+f.querySelector('#dSupCap').value||1); S.staff=Math.max(1,+f.querySelector('#dStaff').value||20); S.manDay=Math.max(0,+f.querySelector('#dManDay').value||28000);
+    S.sups=sp; S.crews=sp; S.supCap=Math.max(1,+f.querySelector('#dSupCap').value||1); S.staff=Math.max(1,+f.querySelector('#dStaff').value||20); S.manDay=Math.max(0,+f.querySelector('#dManDay').value||28000); S.dezuraUrl=f.querySelector('#dDzUrl').value.trim(); S.dezuraToken=f.querySelector('#dDzTok').value.trim();
     S.holiday=f.querySelector('#dHol').value; applyAll();
     save(); render();
   };
@@ -1642,6 +1648,74 @@ function openExport(){
   $('xAll').onclick=()=>run(()=>exportAllBook(+$('xWeeks').value||8));
   $('xEvery').onclick=()=>run(()=>exportEverything(+$('xWeeksAll').value||8,$('xMsg')));
   $('xCsv').onclick=()=>run(()=>downloadCsv(csvRows(S.jobs),`扇屋_案件工種一覧_${toS(today())}.csv`));
+  $('dlg').showModal();
+}
+
+// ---------- 出面（でづら）：出面スプレッドシートとの連携 ----------
+// S.dezura = { 'YYYY-MM': {sites:[{code,ninku,byDay:{date:men},workers:{name:w}}], workers:[...], updated} }
+// 現場コード＝工事番号（j.no）。出面は現場単位なので、工種へは計画期間で按分して実績に入れる。
+const DZ={PREFIX:'出面_',ROW_DAY:2,ROW_FIRST:4,COL_DAY1:1,COL_SECOND:32}; // 0始まりの列（B=1, AG=32）
+function parseDezuraSheet(aoa,month){ // Code.gs の summary_ と同じ読み方
+  const days=aoa[DZ.ROW_DAY-1]||[], sites={}, workers=[];
+  const add=(code,day,name,w)=>{const s=sites[code]||(sites[code]={code,ninku:0,byDay:{},workers:{}}); const d=month+'-'+String(day).padStart(2,'0'); s.ninku+=w; s.byDay[d]=(s.byDay[d]||0)+w; s.workers[name]=(s.workers[name]||0)+w;};
+  const parse=raw=>{const t=String(raw??'').trim(); if(!t) return null; const half=/半$/.test(t); return {code:half?t.replace(/半$/,'').trim():t,w:half?0.5:1}};
+  for(let r=DZ.ROW_FIRST-1;r<aoa.length;r++){const row=aoa[r]||[]; const name=String(row[0]??'').trim(); if(!name||name==='日別人数') continue;
+    let nin=0,cnt=0;
+    for(let c=DZ.COL_DAY1;c<DZ.COL_DAY1+31;c++){const day=parseInt(days[c]); if(!day) continue; const p=parse(row[c]); if(!p) continue; add(p.code,day,name,p.w); nin+=p.w; cnt++;}
+    String(row[DZ.COL_SECOND]??'').split(/[,、\s]+/).forEach(tok=>{const m=tok.match(/^(\d{1,2})[:：](.+)$/); if(!m) return; const p=parse(m[2]); if(!p) return; add(p.code,+m[1],name,p.w); nin+=p.w;});
+    workers.push({name,days:cnt,ninku:nin});}
+  return {month,sites:Object.values(sites),workers,updated:new Date().toISOString()};
+}
+function dezuraOf(j){ // 案件の出面（読み込み済みの全月を合算）
+  const byDay={}, workers={}; let ninku=0; if(!j.no) return {ninku:0,byDay,workers,months:[]}; const months=[];
+  Object.entries(S.dezura||{}).forEach(([m,d])=>{const s=(d.sites||[]).find(x=>x.code===j.no); if(!s) return; months.push(m); ninku+=s.ninku; Object.entries(s.byDay).forEach(([k,v])=>byDay[k]=(byDay[k]||0)+v); Object.entries(s.workers||{}).forEach(([k,v])=>workers[k]=(workers[k]||0)+v);});
+  return {ninku,byDay,workers,months};
+}
+// 出面（現場×日の人数）を工種に按分して ⑥ の実績欄に入れる
+function applyDezura(j){
+  const dz=dezuraOf(j); const dates=Object.keys(dz.byDay).sort(); if(!dates.length) return 0;
+  const acc=j.tasks.map(()=>({days:new Set(),md:0}));
+  const plan=j.tasks.map(t=>t.start&&t.end?[toN(t.start),toN(t.end)]:null);
+  dates.forEach(d=>{const n=toN(d), m=dz.byDay[d]; if(!m) return;
+    let idx=plan.map((p,i)=>p&&n>=p[0]&&n<=p[1]?i:-1).filter(i=>i>=0);
+    if(!idx.length){ // 計画期間の外：いちばん近い工種へ
+      let best=-1,bd=Infinity; plan.forEach((p,i)=>{if(!p) return; const dist=n<p[0]?p[0]-n:n-p[1]; if(dist<bd){bd=dist;best=i}}); if(best<0) best=0; idx=[best];}
+    const w=idx.map(i=>menOf(j.tasks[i])), tw=w.reduce((a,b)=>a+b,0)||1;
+    idx.forEach((i,k)=>{acc[i].days.add(d); acc[i].md+=m*w[k]/tw;});});
+  let n=0;
+  j.tasks.forEach((t,i)=>{const a=acc[i]; if(!a.days.size) return; const ds=[...a.days].sort();
+    t.aStart=ds[0]; t.aEnd=ds[ds.length-1]; t.aDays=ds.length; t.aMen=Math.round(a.md/ds.length*10)/10; t.aSrc='出面'; n++;});
+  return n;
+}
+async function dezuraFetch(month){
+  if(!S.dezuraUrl) throw new Error('「データ・設定」に出面スプレッドシートのURL（Apps Script）を入れてください');
+  const u=S.dezuraUrl+(S.dezuraUrl.includes('?')?'&':'?')+'action=summary&month='+encodeURIComponent(month)+(S.dezuraToken?'&token='+encodeURIComponent(S.dezuraToken):'');
+  const res=await fetch(u,{redirect:'follow'}); const js=await res.json(); if(!js.ok) throw new Error(js.error||'読めませんでした');
+  (S.dezura=S.dezura||{})[js.month]={sites:js.sites,workers:js.workers,updated:js.updated}; save(); return js;
+}
+async function dezuraPushSites(){
+  if(!S.dezuraUrl) throw new Error('「データ・設定」に出面スプレッドシートのURL（Apps Script）を入れてください');
+  const sites=S.jobs.filter(j=>j.no&&j.status!=='完了').map(j=>({code:j.no,name:j.name,sup:j.sup||'',status:j.status}));
+  const res=await fetch(S.dezuraUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'sites',token:S.dezuraToken||'',sites}),redirect:'follow'});
+  const js=await res.json(); if(!js.ok) throw new Error(js.error||'送れませんでした'); return Object.assign({n:sites.length},js.result);
+}
+function openDezura(){
+  const j=curJob(); const ym=toS(today()).slice(0,7); const loaded=Object.keys(S.dezura||{}).sort();
+  $('dlg').innerHTML=`<form method="dialog"><div class="dh">出面を読み込む</div><div class="db">
+    <p class="note">出面スプレッドシート（作業員×日のマスに現場コード＝工事番号）から、現場ごとの日別人数を読みます。読み込むと ⑥ に「出面の人工」が出て、「出面から実績を入れる」で工種の実績（開始・終了・人数・日数）に按分して入ります。</p>
+    <div class="fg"><label class="f">月<input type="month" id="zMonth" value="${ym}"></label>
+      <button type="button" class="btn primary" id="zFetch"${S.dezuraUrl?'':' disabled'} title="${S.dezuraUrl?'':'データ・設定にURLを入れると使えます'}">スプレッドシートから読む</button>
+      <label class="f">または Excelファイル（スプレッドシートをダウンロードしたもの）<input type="file" id="zFile" accept=".xlsx,.xls"></label></div>
+    <p class="note">読み込み済み：${loaded.length?loaded.map(m=>`${m}（${(S.dezura[m].sites||[]).length}現場・${Math.round((S.dezura[m].sites||[]).reduce((a,s)=>a+s.ninku,0)*10)/10}人日）`).join('、'):'なし'}</p>
+    <div id="zPrev"></div><p class="note warn" id="zMsg"></p></div>
+    <div class="df"><button type="button" class="btn" id="zPush"${S.dezuraUrl?'':' disabled'}>現場一覧を出面シートへ送る</button><button class="btn">閉じる</button></div></form>`;
+  const show=d=>{const known=new Set(S.jobs.map(x=>x.no).filter(Boolean));
+    $('zPrev').innerHTML=`<div class="ttw"><table class="tt"><thead><tr><th>現場コード</th><th>案件</th><th class="num">人工（人日）</th><th class="num">稼働日</th></tr></thead><tbody>${d.sites.sort((a,b)=>b.ninku-a.ninku).map(s=>{const jb=S.jobs.find(x=>x.no===s.code);return `<tr><td>${esc(s.code)}</td><td>${jb?esc(jb.name):'<span class="u">（アプリに該当案件なし）</span>'}</td><td class="num">${fmt(s.ninku)}</td><td class="num">${Object.keys(s.byDay).length}</td></tr>`}).join('')}</tbody></table></div><p class="note">${d.month}：作業員 ${d.workers.length}人、のべ ${fmt(d.workers.reduce((a,w)=>a+w.ninku,0))}人日。</p>`;};
+  $('zFetch').onclick=async()=>{$('zMsg').textContent='読み込み中…'; try{const d=await dezuraFetch($('zMonth').value); $('zMsg').textContent=''; show(d); render();}catch(e){$('zMsg').textContent='読めませんでした：'+e.message+'（URL・公開設定・合言葉を確認）'}};
+  $('zFile').onchange=e=>{const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{try{const wb=XLSX.read(rd.result,{type:'array'}); const names=wb.SheetNames.filter(n=>n.startsWith(DZ.PREFIX)); if(!names.length) throw new Error('「出面_YYYY-MM」のシートがありません');
+      let last=null; names.forEach(n=>{const m=n.slice(DZ.PREFIX.length); const aoa=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''}); const d=parseDezuraSheet(aoa,m); (S.dezura=S.dezura||{})[m]={sites:d.sites,workers:d.workers,updated:d.updated}; last=d;});
+      save(); $('zMsg').textContent=`${names.length}か月分を読みました。`; show(last); render();}catch(err){console.error(err);$('zMsg').textContent='読めませんでした：'+err.message}}; rd.readAsArrayBuffer(f);};
+  $('zPush').onclick=async()=>{$('zMsg').textContent='送信中…'; try{const r=await dezuraPushSites(); $('zMsg').textContent=`現場 ${r.n}件を送りました（追加 ${r.added}・更新 ${r.updated}）。`}catch(e){$('zMsg').textContent='送れませんでした：'+e.message}};
   $('dlg').showModal();
 }
 
