@@ -264,7 +264,7 @@ function sampleJobs(){
     ].map(j=>({...j,sample:true,no:''}));
 }
 
-const APP_VER='v3.9';
+const APP_VER='v3.9（11/20 22:00版）'; // 版の後ろに作成時刻。公開ページがこの表示になっていれば最新
 const SUPS0=['田中耕平','平野喜太穂','原昌浩','佐藤恒夫','丸山誠司'], HAN0=['太田裕介','吉田勝広','河野豊','渡辺旭','吉田雪也','境忠昌'];
 // 実行予定予算の経費（扇屋の見積書 49-014 の組み方）：法定福利費＝労務費×16%、建退共＝延べ人数×320円×加入率80%、諸経費＝直接工事費×10%、安全衛生経費＝労務費×10%
 const BUD0={houtei:0.16,kentai:320,kentaiRate:0.8,sho:0.10,anzen:0.10,arari:0.35};
@@ -272,7 +272,7 @@ const pf=v=>parseFloat(v)||0;
 const tl=t=>t.kind+(t.spec?'　'+t.spec:''); // 工種＋名称・規格
 // 更新履歴（① 設計書の下に出す）。新しい版を上に足す
 const HISTORY=[
- ['v3.9','2026-11-20',['監督を実名に（田中耕平・平野喜太穂・原昌浩・佐藤恒夫・丸山誠司）','施工班を追加（太田裕介・吉田勝広・河野豊・渡辺旭・吉田雪也・境忠昌）。① 設計書で工種ごとに選べ、同じ班が同じ日に2現場へ入ると警告','歩掛りを2段階に：ATLUSの人工がある工種はATLUS、無い工種は標準積算。ATLUSや扇屋書式の見積書を取り込むと、工種は1行のまま、代価表・明細表の一番上のページにある名称・規格ごとの内訳（数量・人工・参考日数）を ③ 実行予算に「参考」として出す（例：簡易法枠工 → ラス張工／鉄筋・組立枠設置工／アンカー工／法枠吹付工／モルタル吹付工）。原価・見積・工程は工種1行で計算','ATLUSの行の人件費は「ATLUSの人工×人日単価」に（日数×人数の切上げで膨らまないように。工程の日数だけ切り上げる）','③ と ④ を入れ替え：③ 実行予算 → ④ 見積。実行予算は見積の前に積み上げる「実行予定予算」','実行予算に経費と粗利：法定福利費（見積書の労務費×16%）、建退共（延べ人数×320円×加入率80%）、諸経費（直接工事費×％・調整しろ）、安全衛生経費（見積書の労務費×10%）、粗利（取込元の金額がある案件は、見積を取込元に合わせて粗利を結果として出す。％を入れると 原価÷(1－粗利率) に切り替わる。取込元が無い案件の初期値は35%）','実行予算に「設計書にない項目」（直人・材料費・機械費）と、入れ忘れ確認の警告','④ 見積の画面を扇屋の見積書（49-014）の「本工事費表」と同じ並びに（名称・規格／数量／単位／単価／金額／備考、うち材料費・うち労務費、現場管理費、諸経費、端数調整、工事金額、消費税相当額、合計）','④ 見積は常に ③ 実行予算と同じ数字（直接工事費・現場管理費・諸経費・端数調整・工事金額）。万円未満の切捨ては最後に1回だけ。取り込んだ見積書の金額は参考として表示','ATLUS NEXT（と扇屋書式の見積書）の取込画面から、変えない項目（見出し行・列の指定・プレビュー・コード・日進量）を外した','「データ・設定」に、案件を選んで消す機能（複数まとめて可）','このページの下に更新履歴']],
+ ['v3.9','2026-11-20',['監督を実名に（田中耕平・平野喜太穂・原昌浩・佐藤恒夫・丸山誠司）','施工班を追加（太田裕介・吉田勝広・河野豊・渡辺旭・吉田雪也・境忠昌）。① 設計書で工種ごとに選べ、同じ班が同じ日に2現場へ入ると警告','歩掛りを2段階に：ATLUSの人工がある工種はATLUS、無い工種は標準積算。ATLUSや扇屋書式の見積書を取り込むと、工種は1行のまま、代価表・明細表の一番上のページにある名称・規格ごとの内訳（数量・人工・参考日数）を ③ 実行予算に「参考」として出す（例：簡易法枠工 → ラス張工／鉄筋・組立枠設置工／アンカー工／法枠吹付工／モルタル吹付工）。原価・見積・工程は工種1行で計算。⑤ 計画工程には、内訳を帯の下の刻みと「工程の内訳（参考）」の表で出す','ATLUSの行の人件費は「ATLUSの人工×人日単価」に（日数×人数の切上げで膨らまないように。工程の日数だけ切り上げる）','③ と ④ を入れ替え：③ 実行予算 → ④ 見積。実行予算は見積の前に積み上げる「実行予定予算」','実行予算に経費と粗利：法定福利費（見積書の労務費×16%）、建退共（延べ人数×320円×加入率80%）、諸経費（直接工事費×％・調整しろ）、安全衛生経費（見積書の労務費×10%）、粗利（取込元の金額がある案件は、見積を取込元に合わせて粗利を結果として出す。％を入れると 原価÷(1－粗利率) に切り替わる。取込元が無い案件の初期値は35%）','実行予算に「設計書にない項目」（直人・材料費・機械費）と、入れ忘れ確認の警告','④ 見積の画面を扇屋の見積書（49-014）の「本工事費表」と同じ並びに（名称・規格／数量／単位／単価／金額／備考、うち材料費・うち労務費、現場管理費、諸経費、端数調整、工事金額、消費税相当額、合計）','④ 見積は常に ③ 実行予算と同じ数字（直接工事費・現場管理費・諸経費・端数調整・工事金額）。万円未満の切捨ては最後に1回だけ。取り込んだ見積書の金額は参考として表示','ATLUS NEXT（と扇屋書式の見積書）の取込画面から、変えない項目（見出し行・列の指定・プレビュー・コード・日進量）を外した','「データ・設定」に、案件を選んで消す機能（複数まとめて可）','このページの下に更新履歴']],
  ['v3.8 まで','〜2026-11-20',['施工班の固定をやめ、監督5人が現場ごとに人数を付ける体制に','日数は歩掛×人数だけで決まるように（難易度・監督による係数を廃止）','土曜を稼働日に（休みは日曜のみ）、案件に着手予定を追加','出面の読み込み（スプレッドシート／Excel）と、出面から実績を入れる機能','画面を 設計書→歩掛り→見積→実行予算→計画工程→実施工程 の流れ順に','Excel出力（扇屋書式の見積書・実行予算書・工程表）と一式全部出力（zip）']]
 ];
 function historyHtml(){return `<div style="margin-top:22px;border-top:1px solid var(--line);padding-top:10px"><h3 style="margin:0 0 4px">更新履歴</h3>${HISTORY.map(([v,d,items],i)=>`<details${i===0?' open':''} style="margin:4px 0"><summary><strong>${esc(v)}</strong>　<span class="u">${esc(d)}</span></summary><ul style="margin:4px 0 8px;padding-left:22px;font-size:13px">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('')}</div>`}
@@ -365,6 +365,14 @@ function migrate(){
   if(!S.atlasKind39){S.taiou={}; S.atlasKind39=true;} // 工種をATLUSの名称で拾う方式に変えたので、覚えていた対応表を一度だけ空にする
   if(!S.han) S.han=[]; S.bud=Object.assign({},BUD0,S.bud||{});
   S.jobs.forEach(j=>j.tasks.forEach(t=>{if(t.spec===undefined) t.spec=''}));
+  // 途中の版で代価表の細目に分けて取り込んだ行（sub）を、工種1行＋参考の内訳（ref）へ戻す
+  S.jobs.forEach(j=>{ if(!j.tasks.some(t=>t.sub&&t.pm)) return; const out=[], by={};
+    j.tasks.forEach(t=>{ if(!(t.sub&&t.pm)){out.push(t);return}
+      const key=t.kind+'|'+((t.src&&t.src.rows)||[]).map(x=>x.name).join('／'); let g=by[key];
+      if(!g){g=by[key]={id:t.id,kind:t.kind,spec:t.pspec||'',qty:t.pm.pq,start:t.start,end:t.end,crew:t.crew||'',han:t.han||'',men:'',lock:false,price:'',src:Object.assign({},t.src,{amount:0,ninku:0}),ref:[]}; out.push(g)}
+      g.src.amount+=(t.src&&t.src.amount)||0; g.src.ninku=Math.round((g.src.ninku+((t.src&&t.src.ninku)||0))*100)/100; if(t.end>g.end) g.end=t.end; if(t.start<g.start) g.start=t.start;
+      g.ref.push({spec:t.spec,qty:parseFloat(t.qty)||0,unit:t.unit||'',ninku:(t.src&&t.src.ninku)||0,amount:(t.src&&t.src.amount)||0});});
+    j.tasks=out; });
   S.jobs.forEach(j=>{if(!j.opt) j.opt=[]; if(!j.optNo) j.optNo=[]; if(j.arariR===undefined) j.arariR=''; j.tasks.forEach(t=>{if(t.han===undefined) t.han=''})});
   S.crews=S.sups; if(!S.staff) S.staff=20; if(!S.manDay) S.manDay=28000; if(!S.supCap) S.supCap=2; S.crewCap=99;
   const d2=sampleMaster();
@@ -451,6 +459,11 @@ function renderAlerts(rows){ $('alerts').style.display='';
   el.className=''; el.innerHTML=`<strong>要調整 ${list.length}件</strong><ul>${list.join('')}</ul>`;
 }
 
+function refSegs(t){ if(!t||!t.ref||!t.ref.length||!t.start||!t.end) return [];
+  const D=[]; for(let n=toN(t.start);n<=toN(t.end);n++) if(!isHol(n)) D.push(n); if(!D.length) return [];
+  const tot=t.ref.reduce((a,x)=>a+x.ninku,0)||1, n=D.length, pos=u=>{const i=Math.min(n-1,Math.floor(u+1e-9)); return D[i]+(u-i)};
+  let c=0; return t.ref.map(x=>{const a=c/tot*n; c+=x.ninku; const b=c/tot*n;
+    return {spec:x.spec,qty:x.qty,unit:x.unit,ninku:x.ninku,days:Math.round((b-a)*10)/10,xa:pos(a),xb:pos(b),ds:D[Math.min(n-1,Math.floor(a+1e-9))],de:D[Math.max(0,Math.ceil(b-1e-9)-1)]}});}
 function renderBoard(){
   const rows=buildRows(active()); renderAlerts(rows);
   const days=V.zoom==='day'?56:182, dw=V.zoom==='day'?28:7, W=days*dw, s0=V.start, e0=s0+days-1, t=today();
@@ -487,15 +500,19 @@ function renderBoard(){
     r.items.forEach(it=>{
       const a=Math.max(it.s,s0),b=Math.min(it.e,e0); if(a>b) return;
       const q=it.task&&it.task.qty?`${it.task.qty}${it.task.unit||bk(it.task.kind)?.unit||''}／`:'';
-      const tip=it.segs?`${it.label}\n${md(it.s)}〜${md(it.e)}${it.job.status==='見込み'?'（見込み）':''}\n`+it.segs.map((g,i)=>`${i+1}. ${g.spec}　${md(g.s)}${g.e>g.s?'〜'+md(g.e):''}　${g.men}人${g.han?'・'+g.han:''}`).join('\n'):`${it.label}\n${md(it.s)}〜${md(it.e)}（${q}稼働${wdays(it.s,it.e)}日・${it.men}人）${it.job.status==='見込み'?'\n見込み':''}`;
+      const rs0=refSegs(it.task); const tip=it.segs?`${it.label}\n${md(it.s)}〜${md(it.e)}${it.job.status==='見込み'?'（見込み）':''}\n`+it.segs.map((g,i)=>`${i+1}. ${g.spec}　${md(g.s)}${g.e>g.s?'〜'+md(g.e):''}　${g.men}人${g.han?'・'+g.han:''}`).join('\n'):`${it.label}\n${md(it.s)}〜${md(it.e)}（${q}稼働${wdays(it.s,it.e)}日・${it.men}人）${it.job.status==='見込み'?'\n見込み':''}`;
       inner+=`<button class="item${it.job.status==='見込み'?' pros':''}" data-job="${it.job.id}" title="${esc(tip)}"
         style="left:${(a-s0)*dw+1}px;width:${Math.max((b-a+1)*dw-2,6)}px;top:${4+it.lane*LH}px;background-color:${jc(it.job)}">${esc(it.label)}</button>`;
+      refSegs(it.task).forEach((g,i)=>{const ga=Math.max(g.xa,s0), gb=Math.min(g.xb,e0+1); if(ga>=gb) return;
+        inner+=`<div title="${esc(`参考 ${i+1}. ${g.spec}\n${md(g.ds)}${g.de>g.ds?'〜'+md(g.de):''}（約${g.days}日・${fmt(g.ninku)}人工）`)}" style="position:absolute;left:${(ga-s0)*dw+1}px;width:${Math.max((gb-ga)*dw-2,3)}px;top:${4+it.lane*LH+17}px;height:7px;z-index:3;border-radius:0 0 3px 3px;background:${i%2?'rgba(255,255,255,.85)':'rgba(0,0,0,.45)'};${i?'border-left:2px solid #fff;':''}cursor:help"></div>`});
       if(it.segs) it.segs.forEach((g,i)=>{const ga=Math.max(g.s,s0), gb=Math.min(g.e,e0); if(ga>gb) return;
         inner+=`<div title="${esc(`${i+1}. ${g.spec}\n${md(g.s)}${g.e>g.s?'〜'+md(g.e):''}（稼働${wdays(g.s,g.e)}日・${g.men}人${g.nk?'・ATLUS '+fmt(g.nk)+'人工':''}）`)}" style="position:absolute;left:${(ga-s0)*dw+1}px;width:${Math.max((gb-ga+1)*dw-2,4)}px;top:${4+it.lane*LH+17}px;height:7px;z-index:3;border-radius:0 0 3px 3px;background:${i%2?'rgba(255,255,255,.85)':'rgba(0,0,0,.45)'};${i?'border-left:2px solid #fff;':''}cursor:help"></div>`});
     });
     h+=`<div class="row"><div class="lab${r.over.length?' bad':''}">${esc(r.name)}<span class="u">${r.none?'割り当てが必要':`この範囲で${busy}/${days}日稼働`}</span></div><div class="track" style="width:${W}px;height:${H}px">${inner}</div></div>`;
   });
   h+='</div></div>';
+  {const rt=[]; active().forEach(j=>j.tasks.forEach(t=>{const sg=refSegs(t); sg.forEach((g,i)=>rt.push(`<tr${i===0?' style="border-top:2px solid var(--line)"':''}><td>${i===0?`<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${jc(j)};margin-right:6px"></span>${esc(jl(j))}`:''}</td><td>${i===0?esc(tl(t))+`<span class="u" style="display:block">${md(toN(t.start))}〜${md(toN(t.end))}・${menOf(t)}人・${esc(t.crew||j.sup||'監督未定')}</span>`:''}</td><td>${i+1}. ${esc(g.spec)}</td><td class="num">${fmt(g.qty)} ${esc(g.unit||'')}</td><td class="num">${fmt(g.ninku)}</td><td class="num">${g.days}</td><td>${md(g.ds)}${g.de>g.ds?'〜'+md(g.de):''}</td></tr>`))}));
+   if(rt.length) h+=`<details open class="mst wide" style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">工程の内訳（参考）：代価表・明細表の名称・規格ごと</summary><p class="note">工種の帯の稼働日を、内訳の人工の比で割り振った参考の日付です（帯の下の白黒の刻みと同じ）。工程・人員・原価の計算は工種1行で行っています。</p><div class="ttw"><table class="tt" style="min-width:900px"><thead><tr><th>案件</th><th>工種</th><th>名称・規格（参考）</th><th class="num">数量</th><th class="num">人工</th><th class="num">日数の目安</th><th>参考の期間</th></tr></thead><tbody>${rt.join('')}</tbody></table></div></details>`;}
   $('main').innerHTML=h;
 }
 
@@ -1341,7 +1358,7 @@ const HELP={
   b:[['工種・数量を直す','①設計書に戻る'],['人数（入力欄）','この工種に付ける作業員数。変えると日数と原価が変わる'],['歩掛りの出所','ATLUSの人工がある工種だけ、ATLUSと標準積算を切り替えられる'],['項目を追加','設計書にない項目を1行足す（直人・材料費・機械費）'],['入れ忘れていませんか？','まだ入っていない項目の候補。押すと表に足す。×はこの案件では不要の印'],['粗利（％）','取込元の金額がある案件は自動（見積金額＝取込元の金額、粗利は結果）。数字を入れると 見積金額＝原価÷(1－粗利率) に切り替わる'],['取込元の金額に合わせる（自動に戻す）','手入力の粗利率をやめ、見積金額を取込元の金額に戻す'],['→ ④ 見積へ','次の画面へ']]},
  est:{t:'④ 見積：発注者に出す金額',p:'③ 実行予算と同じ数字を、扇屋の見積書（本工事費表）の並びで出します。金額を変えるときは ③ で粗利か諸経費の％を動かします。取り込んだ見積書がある案件は、その工事金額を参考として表示します。',
   b:[['印刷','ブラウザ印刷（PDF保存も可）'],['← ③ 実行予算','前の画面へ'],['→ ⑤ 計画工程へ','次の画面へ']]},
- board:{t:'⑤ 計画工程：監督ごとの帯と、日ごとの必要人数',p:'一番上の「人員合計」が日ごとの必要人数で、総人員（データ・設定）を超える日は赤。監督の行は受け持つ現場の帯で、同時現場数の上限を超える日は赤帯。帯をクリックすると案件の編集。「配置を最適化」は納期順に、総人員と同時現場数を守りながら評点の低い監督・日程を選びます。',
+ board:{t:'⑤ 計画工程：監督ごとの帯と、日ごとの必要人数',p:'一番上の「人員合計」が日ごとの必要人数で、総人員（データ・設定）を超える日は赤。監督の行は受け持つ現場の帯で、同時現場数の上限を超える日は赤帯。代価表の内訳がある工種は、帯の下の白黒の刻みが内訳の区切り（参考）で、下の「工程の内訳（参考）」に名称・規格ごとの日付が並びます。帯をクリックすると案件の編集。「配置を最適化」は納期順に、総人員と同時現場数を守りながら評点の低い監督・日程を選びます。',
   b:[['◀ 今日 ▶','表示期間を動かす'],['8週／半年','表示幅'],['見込み案件も含める','見込み状態の案件を帯に出すかどうか'],['配置を最適化','全案件の担当監督と日程を自動で決め直す。固定にチェックした工種は動かさない。前に「データ・設定」の文字列を控えておくと戻せる']]},
  act:{t:'⑥ 実施工程：計画と実績を並べ、歩掛を育てる',p:'工種ごとに実際の開始〜終了、かかった班日、出来高数量を入れます。上の灰色が計画、下の青が実績。',
   b:[['出面を読む','出面スプレッドシート（またはそのExcel）から、現場コード＝工事番号ごとの日別人数を読む'],['出面から実績を入れる','出面の日別人数を工種の計画期間で按分し、開始・終了・人数・日数を自動で入れる（出来高数量は手入力）'],['歩掛に反映','その工種の実績（出来高と人日）を②の実績点に追加。採用値が中央値に更新される'],['この案件を完了にする','状態を完了にして工程・配置から外す（案件一覧の「完了」に残る）'],['← ⑤ 計画工程','前の画面へ']]},
