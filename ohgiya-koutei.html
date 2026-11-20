@@ -272,7 +272,7 @@ const pf=v=>parseFloat(v)||0;
 const tl=t=>t.kind+(t.spec?'　'+t.spec:''); // 工種＋名称・規格
 // 更新履歴（① 設計書の下に出す）。新しい版を上に足す
 const HISTORY=[
- ['v3.9','2026-11-20',['監督を実名に（田中耕平・平野喜太穂・原昌浩・佐藤恒夫・丸山誠司）','施工班を追加（太田裕介・吉田勝広・河野豊・渡辺旭・吉田雪也・境忠昌）。① 設計書で工種ごとに選べ、同じ班が同じ日に2現場へ入ると警告','歩掛りを2段階に：ATLUSの人工がある工種はATLUS、無い工種は標準積算。ATLUSを取り込むと、工種の下に、代価表の一番上のページ（その工種の単価表）にある名称・規格ごとの行ができる（例：簡易法枠工 → ラス張工／鉄筋・組立枠設置工／アンカー工／法枠吹付工／モルタル吹付工）。扇屋書式の見積書は明細表の行で分ける（例：ワイヤネット工 → 斜面整理工／ワイヤロープ張り／アンカー設置／金網設置／小運搬）。分けるのは ③ 実行予算と工程の日数で、④ 見積は元の工種1行のまま。⑤ 計画工程は工種ごとに1本の帯にまとめ、細目は帯の下の刻みで示す。歩掛りは行ごとのATLUSの人工で、計画工程の帯も行ごとに出る','ATLUSの行の人件費は「ATLUSの人工×人日単価」に（日数×人数の切上げで膨らまないように。工程の日数だけ切り上げる）','③ と ④ を入れ替え：③ 実行予算 → ④ 見積。実行予算は見積の前に積み上げる「実行予定予算」','実行予算に経費と粗利：法定福利費（見積書の労務費×16%）、建退共（延べ人数×320円×加入率80%）、諸経費（直接工事費×％・調整しろ）、安全衛生経費（見積書の労務費×10%）、粗利（取込元の金額がある案件は、見積を取込元に合わせて粗利を結果として出す。％を入れると 原価÷(1－粗利率) に切り替わる。取込元が無い案件の初期値は35%）','実行予算に「設計書にない項目」（直人・材料費・機械費）と、入れ忘れ確認の警告','④ 見積の画面を扇屋の見積書（49-014）の「本工事費表」と同じ並びに（名称・規格／数量／単位／単価／金額／備考、うち材料費・うち労務費、現場管理費、諸経費、端数調整、工事金額、消費税相当額、合計）','④ 見積は常に ③ 実行予算と同じ数字（直接工事費・現場管理費・諸経費・端数調整・工事金額）。万円未満の切捨ては最後に1回だけ。取り込んだ見積書の金額は参考として表示','ATLUS NEXT（と扇屋書式の見積書）の取込画面から、変えない項目（見出し行・列の指定・プレビュー・コード・日進量）を外した','「データ・設定」に、案件を選んで消す機能（複数まとめて可）','このページの下に更新履歴']],
+ ['v3.9','2026-11-20',['監督を実名に（田中耕平・平野喜太穂・原昌浩・佐藤恒夫・丸山誠司）','施工班を追加（太田裕介・吉田勝広・河野豊・渡辺旭・吉田雪也・境忠昌）。① 設計書で工種ごとに選べ、同じ班が同じ日に2現場へ入ると警告','歩掛りを2段階に：ATLUSの人工がある工種はATLUS、無い工種は標準積算。ATLUSや扇屋書式の見積書を取り込むと、工種は1行のまま、代価表・明細表の一番上のページにある名称・規格ごとの内訳（数量・人工・参考日数）を ③ 実行予算に「参考」として出す（例：簡易法枠工 → ラス張工／鉄筋・組立枠設置工／アンカー工／法枠吹付工／モルタル吹付工）。原価・見積・工程は工種1行で計算','ATLUSの行の人件費は「ATLUSの人工×人日単価」に（日数×人数の切上げで膨らまないように。工程の日数だけ切り上げる）','③ と ④ を入れ替え：③ 実行予算 → ④ 見積。実行予算は見積の前に積み上げる「実行予定予算」','実行予算に経費と粗利：法定福利費（見積書の労務費×16%）、建退共（延べ人数×320円×加入率80%）、諸経費（直接工事費×％・調整しろ）、安全衛生経費（見積書の労務費×10%）、粗利（取込元の金額がある案件は、見積を取込元に合わせて粗利を結果として出す。％を入れると 原価÷(1－粗利率) に切り替わる。取込元が無い案件の初期値は35%）','実行予算に「設計書にない項目」（直人・材料費・機械費）と、入れ忘れ確認の警告','④ 見積の画面を扇屋の見積書（49-014）の「本工事費表」と同じ並びに（名称・規格／数量／単位／単価／金額／備考、うち材料費・うち労務費、現場管理費、諸経費、端数調整、工事金額、消費税相当額、合計）','④ 見積は常に ③ 実行予算と同じ数字（直接工事費・現場管理費・諸経費・端数調整・工事金額）。万円未満の切捨ては最後に1回だけ。取り込んだ見積書の金額は参考として表示','ATLUS NEXT（と扇屋書式の見積書）の取込画面から、変えない項目（見出し行・列の指定・プレビュー・コード・日進量）を外した','「データ・設定」に、案件を選んで消す機能（複数まとめて可）','このページの下に更新履歴']],
  ['v3.8 まで','〜2026-11-20',['施工班の固定をやめ、監督5人が現場ごとに人数を付ける体制に','日数は歩掛×人数だけで決まるように（難易度・監督による係数を廃止）','土曜を稼働日に（休みは日曜のみ）、案件に着手予定を追加','出面の読み込み（スプレッドシート／Excel）と、出面から実績を入れる機能','画面を 設計書→歩掛り→見積→実行予算→計画工程→実施工程 の流れ順に','Excel出力（扇屋書式の見積書・実行予算書・工程表）と一式全部出力（zip）']]
 ];
 function historyHtml(){return `<div style="margin-top:22px;border-top:1px solid var(--line);padding-top:10px"><h3 style="margin:0 0 4px">更新履歴</h3>${HISTORY.map(([v,d,items],i)=>`<details${i===0?' open':''} style="margin:4px 0"><summary><strong>${esc(v)}</strong>　<span class="u">${esc(d)}</span></summary><ul style="margin:4px 0 8px;padding-left:22px;font-size:13px">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`).join('')}</div>`}
@@ -688,11 +688,11 @@ function renderBudget(){
   const inp=(id,v,w,step)=>`<input type="number" step="${step||'any'}" min="0" id="${id}" value="${v}" style="width:${w||64}px;text-align:right">`;
   $('main').innerHTML=`<div class="mst wide">
     <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">直接工事費 ${yen(B.directS)}円（${B.auto?(B.optTotal?'取込元の金額＋任意項目':'取込元と同額')+'・粗利 '+p1(B.arariR)+'%':'粗利 '+p1(B.arariR)+'%込み'}）＋ 現場管理費 ${yen(B.genba)}円 ＋ 諸経費 ${yen(B.sho)}円 － 端数 ${yen(-B.hasu)}円 ＝ 実行予定予算 <strong>${yen(B.kouji)}</strong>円（④ 見積の工事金額と同じ）</span><span style="flex:1"></span><button class="btn" id="bXls" title="実行予算書をExcelに">📄 実行予算書をExcelに</button><button class="btn" id="bEdit">工種・数量を直す</button><button class="btn primary" id="bNext">→ ④ 見積へ</button></div>
-    <p class="note">実行予算は「実行予定予算」。見積の前に、ここで原価と見積金額を並べ、経費を積み上げます。取込元（ATLUS・見積書）の金額がある案件は、見積金額を取込元に合わせ、粗利は「見積金額－原価」の結果として出します。ここの直接工事費・現場管理費・諸経費・端数調整・合計が、同じ数字のまま ④ 見積 に並びます（万円未満の切捨ては最後に1回だけ）。歩掛は2段階：ATLUSの人工がある行（工種の下の名称・規格ごと）はATLUS、無い行は標準積算（実績があれば実績の中央値）。${j.tags.length?`条件タグ：${esc(j.tags.join(','))}`:''}</p>
+    <p class="note">実行予算は「実行予定予算」。見積の前に、ここで原価と見積金額を並べ、経費を積み上げます。取込元（ATLUS・見積書）の金額がある案件は、見積金額を取込元に合わせ、粗利は「見積金額－原価」の結果として出します。ここの直接工事費・現場管理費・諸経費・端数調整・合計が、同じ数字のまま ④ 見積 に並びます（万円未満の切捨ては最後に1回だけ）。歩掛は2段階：ATLUSの人工がある工種はATLUS、無い工種は標準積算（実績があれば実績の中央値）。${j.tags.length?`条件タグ：${esc(j.tags.join(','))}`:''}</p>
     <h3 style="margin:10px 0 4px">1．設計書の工種（直接工事費）</h3>
-    <p class="note">ATLUSの行：人件費＝ATLUSの人工×人日単価 ${yen(md0)}円、機械・車両＝（人工÷人数）日×日額、工程の日数＝人工÷人数の切上げ。標準積算の行：人件費＝日数×人数×人日単価、日数＝数量÷（日当り施工量×人数／標準人数）。材料＝数量×材料単価（代価表の細目に分けた行は、親工種の材料費を官金額の比で按分）。</p>
+    <p class="note">ATLUSの行：人件費＝ATLUSの人工×人日単価 ${yen(md0)}円、機械・車両＝（人工÷人数）日×日額、工程の日数＝人工÷人数の切上げ。標準積算の行：人件費＝日数×人数×人日単価、日数＝数量÷（日当り施工量×人数／標準人数）。材料＝数量×材料単価。工種の下の「参考：代価表の内訳」は、取込元の代価表・明細表の一番上のページにある名称・規格ごとの数量と人工で、参考表示です（計算は工種1行で行います）。</p>
     <div class="ttw"><table class="tt" style="min-width:1150px"><thead><tr><th>工種</th><th class="num">数量</th><th>歩掛りの出所</th><th class="num">人数</th><th class="num">日数</th><th class="num">人日</th><th class="num">人件費</th><th class="num">機械・車両</th><th class="num">材料</th><th class="num">原価</th><th class="num">見積金額<span class="u" style="display:block">${B.auto?'取込元の金額':'粗利込み'}</span></th><th class="num">幅</th><th class="num">官 日当り／日数</th><th class="num">官 金額</th></tr></thead><tbody>
-    ${rows.map((r,k)=>`<tr><td>${esc(r.t.kind)}${r.b?'':' <span class="warn">歩掛未登録</span>'}${r.t.spec?`<span class="u" style="display:block;padding-left:1em">${esc(r.t.spec)}</span>`:''}</td>
+    ${rows.map((r,k)=>`<tr><td>${esc(r.t.kind)}${r.b?'':' <span class="warn">歩掛未登録</span>'}${r.t.spec?`<span class="u" style="display:block;padding-left:1em">${esc(r.t.spec)}</span>`:''}${r.t.ref?.length?`<details style="margin-top:2px"><summary class="u" style="cursor:pointer">参考：代価表の内訳（${r.t.ref.length}行）</summary><table class="tt" style="min-width:0;font-size:12px;margin:2px 0 4px 1em"><thead><tr><th>名称・規格</th><th class="num">数量</th><th class="num">人工</th><th class="num">参考日数<span class="u" style="display:block">人工÷${r.men}人</span></th></tr></thead><tbody>${r.t.ref.map(x=>`<tr><td>${esc(x.spec)}</td><td class="num">${fmt(x.qty)} ${esc(x.unit||'')}</td><td class="num">${fmt(x.ninku)}</td><td class="num">${Math.round(x.ninku/r.men*10)/10}</td></tr>`).join('')}</tbody><tfoot><tr><td>計</td><td></td><td class="num">${fmt(Math.round(r.t.ref.reduce((a,x)=>a+x.ninku,0)*100)/100)}</td><td class="num">${Math.round(r.t.ref.reduce((a,x)=>a+x.ninku,0)/r.men*10)/10}</td></tr></tfoot></table></details>`:''}</td>
       <td class="num">${r.q?fmt(r.q)+esc((r.t.unit||r.b?.unit||'')):'—'}</td>
       <td>${r.t.sub?`<span class="u">ATLUS ${fmt(r.src.ninku)}人工（代価表の細目）</span>`:r.src?.ninku>0?`<select data-bs="${k}" aria-label="歩掛りの出所"><option value=""${r.an?' selected':''}>ATLUS（${fmt(r.src.ninku)}人工）</option><option value="std"${r.an?'':' selected'}>標準積算・実績（${r.st?fmt(r.st.rate):'—'}${esc((r.t.unit||r.b?.unit||''))}/日）</option></select>`:`<span class="u">標準積算${r.st&&r.st.n?'→実績 n='+r.st.n:''}　${r.st?fmt(r.st.rate):'—'}${esc((r.t.unit||r.b?.unit||''))}/日${r.b?.men?'（標準'+r.b.men+'人）':''}</span>`}</td>
       <td class="num"><input type="number" min="1" step="1" data-men="${k}" value="${r.men}" style="width:56px;text-align:right" aria-label="人数"></td>
@@ -796,7 +796,7 @@ function renderDesign(){
   if(!j){$('main').innerHTML=`<div class="mst wide">${head}<p class="empty">案件がありません。ATLUSのExcelを取り込むか、手入力で追加してください（試したいだけなら「案件一覧」→「見本案件を入れる」）。</p>${historyHtml()}</div>`;$('dImp').onclick=()=>openImport();$('dAdd').onclick=()=>openEdit();return}
   const used=j.tasks.filter(t=>!bk(t.kind)).length;
   const rows=j.tasks.map((t,k)=>`<tr data-k="${k}"><td><input type="text" class="k" list="kinds" value="${esc(t.kind)}" style="width:260px" aria-label="工種">${bk(t.kind)?'':' <span class="warn">歩掛未登録</span>'}</td>
-    <td><input type="text" class="sp" value="${esc(t.spec||'')}" placeholder="${esc(t.src?.rows?.length&&!t.spec?t.src.rows.map(r=>r.name).join('／').slice(0,60):'')}" style="width:300px" aria-label="名称・規格">${t.src?.ninku>0?`<span class="u" style="display:block">ATLUS ${fmt(t.src.ninku)}人工</span>`:''}${t.src?.qtyNote?`<span class="u" style="display:block">数量：${esc(t.src.qtyNote)}</span>`:''}</td>
+    <td><input type="text" class="sp" value="${esc(t.spec||'')}" placeholder="${esc(t.src?.rows?.length&&!t.spec?t.src.rows.map(r=>r.name).join('／').slice(0,60):'')}" style="width:300px" aria-label="名称・規格">${t.src?.ninku>0?`<span class="u" style="display:block">ATLUS ${fmt(t.src.ninku)}人工${t.ref?.length?`（代価表の内訳 ${t.ref.length}行は ③ に参考表示）`:''}</span>`:''}${t.src?.qtyNote?`<span class="u" style="display:block">数量：${esc(t.src.qtyNote)}</span>`:''}</td>
     <td class="num"><input type="number" step="any" min="0" class="q" value="${esc(t.qty??'')}" style="width:100px;text-align:right" aria-label="数量"></td><td class="u">${esc(t.unit||bk(t.kind)?.unit||'')}</td>
     <td class="num"><input type="number" min="1" step="1" class="m" value="${esc(t.men||'')}" placeholder="${bk(t.kind)?.men||4}" style="width:56px;text-align:right" aria-label="人数"></td>
     <td><select class="c" aria-label="担当監督">${opts(S.sups,t.crew||'',j.sup?'主担当（'+esc(j.sup)+'）':'未定')}</select></td>
@@ -820,7 +820,7 @@ function renderDesign(){
     </div>
     <h3 style="margin:14px 0 4px">工種と数量（設計書）</h3>
     <div class="ttw"><table class="tt" style="min-width:760px"><thead><tr><th>工種</th><th>名称・規格</th><th class="num">数量</th><th>単位</th><th class="num">人数</th><th>担当監督</th><th>施工班</th><th></th></tr></thead><tbody>${rows}${extra}</tbody></table></div>
-    <p class="note">名称・規格＝工種の下の細目（ATLUSを取り込むと、代価表の一番上のページの名称・規格ごとに行ができる。歩掛りも工程表の帯も行ごと）。人数＝この行に付ける作業員の人数（空欄なら工種の標準人数）。日数は人数で変わり、原価は人日×人日単価。担当監督が空欄なら主担当の監督が受け持ちます。施工班は名簿（データ・設定）から選び、同じ班が同じ日に別の案件へ入ると ⑤ 計画工程 に警告が出ます。</p>
+    <p class="note">名称・規格＝工種の規格（ATLUSの行の規格が入る。手入力もできる）。代価表の内訳は ③ 実行予算に参考として出ます。人数＝この行に付ける作業員の人数（空欄なら工種の標準人数）。日数は人数で変わり、原価は人日×人日単価。担当監督が空欄なら主担当の監督が受け持ちます。施工班は名簿（データ・設定）から選び、同じ班が同じ日に別の案件へ入ると ⑤ 計画工程 に警告が出ます。</p>
     <div class="bar" style="margin-top:8px"><button class="btn" id="dRow">工種を追加</button><button class="btn" id="dTpl">法面の標準工程を入れる</button><span style="flex:1"></span><button class="btn" id="dXls" title="表紙・本工事費表・実行予算書・工程表を1冊のExcelに">📄 この案件をExcelに</button><button class="btn danger" id="dDelJob">この案件を削除</button><button class="btn" id="dDetail">日付・班の詳細編集</button><button class="btn primary" id="dNext">→ ② 歩掛りを確認</button></div>
     ${used?`<p class="note warn">歩掛りが未登録の工種が${used}件あります。② 歩掛り で登録するか、工種名をマスタに合わせてください。</p>`:''}
     ${j.atlas?`<p class="note">ATLUS取込済み：直接工事費 ${yen(Object.values(j.atlas.totals).reduce((a,b)=>a+(b||0),0))}円（労材機は ③ 実行予算 で自社と並びます）</p>`:''}
@@ -1080,7 +1080,7 @@ function drawImport(){
     const rows=impRows(); IMP.rows=rows;
     const kinds=S.bugakari.map(b=>b.kind);
     const AT=!!IMP.atlas;
-    body+=`<p class="note">${rows.length}行を検出。${AT?'各行は、代価表・明細表の一番上のページ（その行が参照する単価表／明細表）にある名称・規格ごとに分けて取り込みます。歩掛りは各行の人工です。分けられない行はそのまま1行になります。':'自社工種との対応表：名称から自動で推定しています（違っていれば直す）。一度決めた対応は次回から自動で入ります。同じ自社工種に結んだ行は数量・金額を合算します。'}</p>
+    body+=`<p class="note">${rows.length}行を検出。${AT?'工種は1行で取り込みます（歩掛りはその工種のATLUSの人工）。代価表・明細表の一番上のページにある名称・規格ごとの内訳は、③ 実行予算に「参考」として出ます。':'自社工種との対応表：名称から自動で推定しています（違っていれば直す）。一度決めた対応は次回から自動で入ります。同じ自社工種に結んだ行は数量・金額を合算します。'}</p>
     <div class="ttw"><table class="tt" style="min-width:760px"><thead><tr>${AT?'':'<th>行</th><th>コード</th>'}<th>名称</th><th class="num">数量</th><th class="num">金額</th>${AT?'':'<th class="num">日進量</th>'}<th>自社工種</th></tr></thead><tbody>
     ${rows.map((r,k)=>{let cur=S.taiou[keyOf(r)]??''; if(cur===''&&IMP.atlas){cur=guessKind(r.name); if(!cur&&!/式/.test(r.unit)&&ninkuForRows(IMP.atlas,[r])>0) cur='__atlas'; if(cur) S.taiou[keyOf(r)]=cur;} return `<tr>${AT?'':`<td>${r.row}</td><td>${esc(r.code)}</td>`}<td>${esc(r.name)}</td><td class="num">${fmt(r.qty)}${esc(r.unit)}</td><td class="num">${r.amount?yen(r.amount):''}</td>${AT?'':`<td class="num">${r.daily?fmt(r.daily):''}</td>`}
       <td><select data-map="${k}" aria-label="自社工種"><option value="">未対応（官の単価・金額をそのまま使う）</option><option value="__skip"${cur==='__skip'?' selected':''}>取り込まない</option>${IMP.atlas?`<option value="__atlas"${cur==='__atlas'?' selected':''}>該当なし：ATLUSの工種見出しで新しい工種を作る（歩掛はATLUSの人工）</option>`:''}${kinds.map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></td></tr>`}).join('')}
@@ -1154,7 +1154,7 @@ function doImport(status){
     if(q==null){extra.push({name:b.kind+'（'+o.rows.map(r=>r.name).join('／').slice(0,40)+'）数量不明・1式',qty:1,unit:'式',amount:o.amount,est:o.amount||undefined}); return []}
     const nk=AT?(o.rows.reduce((a,rw)=>{const top=topOf(rw); return a+(top&&top.base.qty>0?ninkuOf(AT,top)*rw.qty/top.base.qty:0)},0)||ninkuForRows(AT,o.rows)):0;
     const mk=(spec,qty,unit,ninku,amount,extraF)=>{const tt={kind:o.kind,spec}; return Object.assign({id:uid(),kind:o.kind,spec,qty:Math.round(qty*100)/100,start:IMP.start,end:IMP.start,crew:oldCrew[tl(tt)]||'',han:oldHan[tl(tt)]||'',price:'',src:{amount,daily:o.daily,days:o.days,rows:o.rows,ninku:ninku?Math.round(ninku*100)/100:0,qtyNote:o.qtyNote||''}},extraF||{})};
-    // 代価表・明細表の一番上のページ（この行が参照する単価表／明細表）の名称・規格ごとに行を分ける。歩掛りは各行の下位の単価表の人工
+    // 代価表・明細表の一番上のページ（この行が参照する単価表／明細表）の名称・規格ごとの内訳を拾う（参考表示用）。人工は各行の下位の単価表から
     if(AT){const kids=[]; let direct=0;
       o.rows.forEach(rw=>{const top=topOf(rw); if(!top||!(top.base.qty>0)) return; const sc=rw.qty/top.base.qty;
         AT.daika.filter(c=>c.no===top.no).forEach(c=>c.items.forEach(x=>{
@@ -1162,10 +1162,9 @@ function doImport(status){
           const sub=subOf(AT,c,x,top.no), n=sub&&sub.base.qty>0?ninkuOf(AT,sub)*x.qty/sub.base.qty*sc:0;
           if(n>0) kids.push({spec:(x.name+(x.spec?' '+x.spec:'')).trim(),qty:x.qty*sc,unit:x.unit,ninku:n,amount:Math.round((x.amt||0)*sc)});}));});
       if(direct>0.005&&kids.length) kids.push({spec:'労務（単価表に直接計上）',qty:1,unit:'式',ninku:direct,amount:0});
-      if(kids.length>1){const tot=kids.reduce((a,x)=>a+x.amount,0)||1;
-        // 官 金額は、元の行の金額（材料だけの行や補正も含む）を細目の金額比で割り振る。合計は取込元の直接工事費と同じになる
-        let rest=Math.round(o.amount); kids.forEach((x,i)=>{x.kan=i===kids.length-1?rest:Math.round(o.amount*x.amount/tot); rest-=x.kan});
-        return kids.map(x=>mk(x.spec,x.qty,x.unit,x.ninku,x.kan,{sub:true,unit:x.unit,pm:{pq:Math.round(q*100)/100,share:x.amount/tot},pspec:o.spec}));}}
+      // 内訳は「参考」として工種の行に添えるだけ（行は分けない）。歩掛りは内訳の人工の合計＝この工種のATLUSの人工
+      if(kids.length>1){const nks=kids.reduce((a,x)=>a+x.ninku,0);
+        return [mk(o.spec,q,null,nks,o.amount,{ref:kids.map(x=>({spec:x.spec,qty:Math.round(x.qty*100)/100,unit:x.unit,ninku:Math.round(x.ninku*100)/100,amount:x.amount}))})];}}
     return [mk(o.spec,q,null,nk,o.amount)]});
   j.extra=extra; if(IMP.atlas){j.atlas=IMP.atlas; if(!j.place&&IMP.atlas.meta.place) j.place=IMP.atlas.meta.place; if(!j.no&&IMP.atlas.meta.no) j.no=IMP.atlas.meta.no;} packJob(j);
   return j.id;
@@ -1229,7 +1228,7 @@ function renderEst(){
   const R=(name,sub,qty,unit,price,amt,note,o={})=>`<tr${o.inner?' class="u"':''}><td style="max-width:560px;white-space:normal${o.b?';font-weight:700':''}">${name}${sub?`<span class="u" style="display:block;padding-left:1em;font-weight:400;white-space:normal">${sub}</span>`:''}</td><td class="num">${qty??''}</td><td>${unit||''}</td><td class="num">${price??''}</td><td class="num"${o.b?' style="font-weight:700"':''}>${amt??''}</td><td class="u" style="white-space:nowrap">${note||''}</td></tr>`;
   $('main').innerHTML=`<div class="mst wide">
     <div class="bar"><strong style="font-size:16px">${esc(jl(j))}</strong><span class="u">${esc(j.client||'')}　${esc(j.place||'')}</span><span style="flex:1"></span><button class="btn" id="sXls" title="表紙＋本工事費表（扇屋書式）をExcelに">📄 見積書をExcelに</button><button class="btn" id="sPrint">印刷</button><button class="btn" id="sBack">← ③ 実行予算</button><button class="btn primary" id="sNext">→ ⑤ 計画工程へ</button></div>
-    <p class="note">見積は ③ 実行予算と同じ数字です（直接工事費・現場管理費・諸経費・端数調整・工事金額のすべて）。${T.BT.auto?'直接工事費は取込元の金額に合わせています。':''}並びは扇屋の見積書（49-014）の「本工事費表」と同じ。③ で代価表・明細表の細目に分けた行は、見積では元の工種1行にまとめています（金額は細目の合計）。金額を変えるときは ③ で粗利か諸経費の％を動かしてください。${j.atlas?.kouji?`<br>参考：取り込んだ見積書の工事金額は ${yen(j.atlas.kouji)}円（いまの積み上げとの差 ${yen(T.est-j.atlas.kouji)}円）。`:''}</p>
+    <p class="note">見積は ③ 実行予算と同じ数字です（直接工事費・現場管理費・諸経費・端数調整・工事金額のすべて）。${T.BT.auto?'直接工事費は取込元の金額に合わせています。':''}並びは扇屋の見積書（49-014）の「本工事費表」と同じ。金額を変えるときは ③ で粗利か諸経費の％を動かしてください。${j.atlas?.kouji?`<br>参考：取り込んだ見積書の工事金額は ${yen(j.atlas.kouji)}円（いまの積み上げとの差 ${yen(T.est-j.atlas.kouji)}円）。`:''}</p>
     <div class="ttw"><table class="tt" style="min-width:960px"><thead>${HD}</thead><tbody>
     ${T.rows.map((r,k)=>{const b=BR[k], sub=r.t.spec?esc(r.t.spec):(r.t.src?.rows?.length?esc(r.t.src.rows.map(y=>y.name).join('／')).slice(0,90):'');
       return R(esc(r.t.kind)+(r.b?'':' <span class="warn">歩掛未登録</span>'),sub,r.q?fmt(r.q):'',esc((r.t.unit||r.b?.unit||'')),
@@ -1342,7 +1341,7 @@ const HELP={
   b:[['工種・数量を直す','①設計書に戻る'],['人数（入力欄）','この工種に付ける作業員数。変えると日数と原価が変わる'],['歩掛りの出所','ATLUSの人工がある工種だけ、ATLUSと標準積算を切り替えられる'],['項目を追加','設計書にない項目を1行足す（直人・材料費・機械費）'],['入れ忘れていませんか？','まだ入っていない項目の候補。押すと表に足す。×はこの案件では不要の印'],['粗利（％）','取込元の金額がある案件は自動（見積金額＝取込元の金額、粗利は結果）。数字を入れると 見積金額＝原価÷(1－粗利率) に切り替わる'],['取込元の金額に合わせる（自動に戻す）','手入力の粗利率をやめ、見積金額を取込元の金額に戻す'],['→ ④ 見積へ','次の画面へ']]},
  est:{t:'④ 見積：発注者に出す金額',p:'③ 実行予算と同じ数字を、扇屋の見積書（本工事費表）の並びで出します。金額を変えるときは ③ で粗利か諸経費の％を動かします。取り込んだ見積書がある案件は、その工事金額を参考として表示します。',
   b:[['印刷','ブラウザ印刷（PDF保存も可）'],['← ③ 実行予算','前の画面へ'],['→ ⑤ 計画工程へ','次の画面へ']]},
- board:{t:'⑤ 計画工程：監督ごとの帯と、日ごとの必要人数',p:'一番上の「人員合計」が日ごとの必要人数で、総人員（データ・設定）を超える日は赤。監督の行は受け持つ現場の帯で、同時現場数の上限を超える日は赤帯。代価表・明細表の細目に分けた工種は1本の帯にまとめ、帯の下の白黒の刻みが細目の区切りです（刻みにマウスを置くと名称・規格と日付、帯に置くと一覧）。帯をクリックすると案件の編集。「配置を最適化」は納期順に、総人員と同時現場数を守りながら評点の低い監督・日程を選びます。',
+ board:{t:'⑤ 計画工程：監督ごとの帯と、日ごとの必要人数',p:'一番上の「人員合計」が日ごとの必要人数で、総人員（データ・設定）を超える日は赤。監督の行は受け持つ現場の帯で、同時現場数の上限を超える日は赤帯。帯をクリックすると案件の編集。「配置を最適化」は納期順に、総人員と同時現場数を守りながら評点の低い監督・日程を選びます。',
   b:[['◀ 今日 ▶','表示期間を動かす'],['8週／半年','表示幅'],['見込み案件も含める','見込み状態の案件を帯に出すかどうか'],['配置を最適化','全案件の担当監督と日程を自動で決め直す。固定にチェックした工種は動かさない。前に「データ・設定」の文字列を控えておくと戻せる']]},
  act:{t:'⑥ 実施工程：計画と実績を並べ、歩掛を育てる',p:'工種ごとに実際の開始〜終了、かかった班日、出来高数量を入れます。上の灰色が計画、下の青が実績。',
   b:[['出面を読む','出面スプレッドシート（またはそのExcel）から、現場コード＝工事番号ごとの日別人数を読む'],['出面から実績を入れる','出面の日別人数を工種の計画期間で按分し、開始・終了・人数・日数を自動で入れる（出来高数量は手入力）'],['歩掛に反映','その工種の実績（出来高と人日）を②の実績点に追加。採用値が中央値に更新される'],['この案件を完了にする','状態を完了にして工程・配置から外す（案件一覧の「完了」に残る）'],['← ⑤ 計画工程','前の画面へ']]},
@@ -1640,6 +1639,9 @@ function wsBudget(j,T){
   const sum=k=>BR.reduce((a,r)=>a+(r[k]||0),0), kan=BR.reduce((a,r)=>a+(r.src?.amount||0),0)+(j.extra||[]).reduce((a,e)=>a+(e.amount||0),0);
   const Bd=n=>Array.from({length:n},()=>C('',XS.bold));
   rows.push([C('小計',XS.bold),...Bd(6),D(sum('days'),XS.bnum),D(sum('manDays'),XS.bnum),C('',XS.bold),N(sum('labor'),XS.bnum),C('',XS.bold),N(sum('mach'),XS.bnum),C('',XS.bold),N(sum('mat'),XS.bnum),N(sum('total')+B.exCost,XS.bnum),N(B.rowSell.reduce((a,v)=>a+v,0)+B.exSell.reduce((a,v)=>a+v,0),XS.bnum),N(kan,XS.bnum),C('',XS.bold),C('',XS.bold)]);
+  if(BR.some(r=>r.t.ref?.length)){ rows.push([]); rows.push([C('参考：代価表・明細表の内訳（工種ごと。計算は工種1行で行う）',XS.h2)]);
+    rows.push(['工種','名称・規格','数量','単位','人工','参考日数（人工÷人数）'].map(h=>C(h,XS.th)));
+    BR.forEach(r=>(r.t.ref||[]).forEach(x=>rows.push([C(r.t.kind,XS.td),C(x.spec,XS.td),D(x.qty),C(x.unit||'',XS.td),D(x.ninku),D(Math.round(x.ninku/r.men*10)/10)]))); }
   rows.push([]); rows.push([C('2．設計書にない項目（任意）',XS.h2)]);
   rows.push(['項目','直人（人日）','人日単価','人件費','材料費','機械費','原価 計','見積金額（粗利込み）','メモ'].map(h=>C(h,XS.th)));
   (j.opt||[]).forEach((o,k)=>{const c=optCost(o); rows.push([C(o.name||'',XS.td),D(pf(o.men)),N(md0),N(c.labor),N(c.mat),N(c.mach),N(optSum(o)),N(B.optSell[k],XS.bnum),C(o.note||'',XS.td)])});
