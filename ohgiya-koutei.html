@@ -139,6 +139,7 @@ textarea.code{width:100%;min-height:200px;font-family:ui-monospace,Menlo,Consola
     <button class="btn" id="bdXls" title="人員計画表（日×監督の人数）と全案件工程表をExcelに（今週から8週）">📄 人員計画をExcelに</button>
     </span>
     <button class="btn" id="xls" title="見積書・実行予算書・工程表・人員計画表をExcelに、一覧をCSVに">Excel出力</button>
+    <button class="btn" id="xEveryTop" title="進行中の全案件の1冊ずつ＋人員計画・全案件工程＋CSVを1つのzipで">📦 一式全部出力</button>
     <button class="btn" id="data" title="監督・総人員・人日単価・休日の設定と、データの書き出し／読み込み／全消去">データ・設定</button>
   </div>
 </header>
@@ -238,10 +239,10 @@ function sample(){
   const sups=['監督A','監督B','監督C','監督D','監督E'];
   const crewRank={}; sups.forEach((c,i)=>{crewRank[c]={}; ['吹付法枠工 F300','鉄筋挿入工 L=2〜5m','植生基材吹付工 t=3〜5cm','モルタル吹付工 t=5〜7cm'].forEach(k=>crewRank[c][k]=['松','松','竹','竹','梅'][i]);});
   return {
-    sups, supRank:{}, crews:sups.slice(), crewRank, rules:sampleRules(), staff:20, manDay:28000,
+    sups, supRank:{}, crews:sups.slice(), crewRank, rules:sampleRules(), staff:20, manDay:28000, policy:'due', supDiff:{'監督A':{A:true,B:true,C:true},'監督B':{A:true,B:true,C:true},'監督C':{A:true,B:true,C:true},'監督D':{A:true,B:true,C:true},'監督E':{A:false,B:true,C:true}},
     weights:{due:10,early:2,dist:2,waste:3,level:1},
     est:{keihi:0.10,houtei:0.05,kanri:0.30,rieki:0.08,tax:0.10},
-    supCap:2, crewCap:99, holiday:'sat-sun', bugakari:sampleMaster(),
+    supCap:2, crewCap:99, holiday:'sun', bugakari:sampleMaster(),
     jobs:[]
   };
 }
@@ -287,7 +288,8 @@ const supRank=p=>(S.supRank?.[p])||'竹';
 const rule=(rank,diff)=>(S.rules?.[rank]?.[diff])||{use:'可',k:1};
 // 歩掛係数：班が決まっていれば その班のランク×現場難易度 の係数。未定なら1
 // 単位が「日」の工種（準備工・片付け・外構工など日数指定のもの）には係数を掛けない
-const kOf=(t,j)=>{const b=bk(t.kind); if(!b||b.unit==='日') return 1; return t.crew&&j&&j.diff?(rule(crewRank(t.crew,t.kind),j.diff).k||1):1};
+const kOf=(t,j)=>1; // v3.7：ランク×難易度の係数は廃止（日数は歩掛×人数だけで決まる）
+const canDo=(sup,diff)=>{const d=S.supDiff?.[sup]; return d?d[diff||'B']!==false:true}; // 監督がその難易度の現場を担当できるか
 const menOf=t=>{const b=bk(t.kind); const m=parseFloat(t.men); return m>0?m:(b?.men||4)};
 const menRatio=t=>{const b=bk(t.kind); if(!b||b.unit==='日') return 1; return menOf(t)/(b.men||4)};
 function need(t,tags,j){const st=stats(bk(t.kind),tags),q=parseFloat(t.qty);if(!(st&&st.rate>0&&q>0))return null;return Math.max(1,Math.ceil(q/(st.rate*kOf(t,j)*menRatio(t))))}
@@ -326,7 +328,7 @@ function migrate(){
   if(!S.weights) S.weights={due:10,early:2,dist:2,waste:3,level:1}; if(S.weights.early===undefined) S.weights.early=2;
   if(!S.est) S.est={keihi:0.10,houtei:0.05,kanri:0.30,rieki:0.08,tax:0.10};
   if(!S.crewSize) S.crewSize=4;
-  // v3.6：施工班を廃止し「監督＝班」。監督が現場ごとに人数を決める体制に合わせる
+  // v3.7：施工班を廃止し「監督＝班」。監督が現場ごとに人数を決める体制に合わせる
   if(!S.staffModel){
     const old=S.crews||[]; S.crews=S.sups.slice();
     const map={}; old.forEach((c,i)=>{map[c]=S.sups[i]||''});
@@ -338,13 +340,18 @@ function migrate(){
   const d2=sampleMaster();
   S.bugakari.forEach(b=>{const x=d2.find(y=>y.kind===b.kind); if(!(b.men>0)) b.men=x?x.men:stdMen(b.kind); if(b.mach===undefined) b.mach=x?x.mach:stdMach(b.kind);});
   S.jobs.forEach(j=>j.tasks.forEach(t=>{if(t.men===undefined) t.men='';}));
+  if(!S.supDiff){S.supDiff={}; S.sups.forEach(p=>{const ranks=Object.values(S.crewRank?.[p]||{}); const weak=ranks.length&&ranks.every(r=>r==='梅'); S.supDiff[p]={A:!weak,B:true,C:true}});}
+  S.sups.forEach(p=>{if(!S.supDiff[p]) S.supDiff[p]={A:true,B:true,C:true}});
+  if(!S.policy) S.policy='due';
+  if(!S.satWork){S.holiday='sun'; S.satWork=true;} // 2026-11-20 土曜は基本稼働（日曜のみ休み）に統一
+  S.jobs.forEach(j=>{if(j.startPlan===undefined) j.startPlan='';});
 }
 function load(){
   let fresh=false;
   try{let r=localStorage.getItem(KEY)||localStorage.getItem('ohgiya-koutei-v2'); if(r) S=JSON.parse(r)}catch(e){}
   if(!S){S=sample();fresh=true}
   if(!S.bugakari) S.bugakari=sampleMaster();
-  if(!S.holiday) S.holiday='sat-sun';
+  if(!S.holiday) S.holiday='sun';
   migrate();
   if(fresh){S.samplesCleared=true;} S.jobs.forEach(packJob); applyAll();
 }
@@ -411,7 +418,7 @@ function renderBoard(){
   let h=`<div class="wrap"><div class="grid" style="width:${W+128}px">`;
   // header
   let hc='';
-  for(let i=0;i<days;i++){const n=s0+i,d=new Date(n*DAY),we=dow(n)===0||dow(n)===6;
+  for(let i=0;i<days;i++){const n=s0+i,d=new Date(n*DAY),we=isHol(n);
     if(V.zoom==='day'){
       const m=(d.getUTCDate()===1||i===0)?`<span class="m">${d.getUTCMonth()+1}月</span>`:'<span class="m">&nbsp;</span>';
       hc+=`<div class="dcell${we?' we':''}" style="left:${i*dw}px;width:${dw}px">${m}${d.getUTCDate()}</div>`;
@@ -422,7 +429,7 @@ function renderBoard(){
   h+=`<div class="row hdr"><div class="lab">担当</div><div class="track" style="width:${W}px;height:40px">${hc}</div></div>`;
   // background stripes shared
   let bg='';
-  if(V.zoom==='day') for(let i=0;i<days;i++){const n=s0+i; if(dow(n)===0||dow(n)===6) bg+=`<div class="bg we" style="left:${i*dw}px;width:${dw}px"></div>`}
+  if(V.zoom==='day') for(let i=0;i<days;i++){const n=s0+i; if(isHol(n)) bg+=`<div class="bg we" style="left:${i*dw}px;width:${dw}px"></div>`}
   if(t>=s0&&t<=e0) bg+=`<div class="bg today" style="left:${(t-s0)*dw}px"></div>`;
   let lastKind='';
   rows.forEach(r=>{
@@ -460,13 +467,14 @@ function renderJobs(){
   <p class="note">工事番号は「期-連番」（例 49-014）。空欄なら次の番号を提案します。完了にした案件は工程・配置から外れ、ここの「完了」に残ります。</p>`;
   if(!js.length){$('main').innerHTML=`<div class="mst wide">${bar}<p class="empty">${F}の案件はありません。</p></div>`;bind();return}
   $('main').innerHTML=`<div class="mst wide">${bar}
-    <div class="ttw"><table class="tt" style="min-width:1000px"><thead><tr><th>番号</th><th>工事名</th><th>発注者／場所</th><th>状態</th><th>監督</th><th>工程</th><th>納期</th><th class="num">見積</th><th class="num">実行予算</th><th class="num">粗利</th><th></th></tr></thead><tbody>
+    <div class="ttw"><table class="tt" style="min-width:1000px"><thead><tr><th>番号</th><th>工事名</th><th>発注者／場所</th><th>状態</th><th>監督</th><th>着手予定</th><th>工程</th><th>納期</th><th class="num">見積</th><th class="num">実行予算</th><th class="num">粗利</th><th></th></tr></thead><tbody>
     ${js.map(j=>{const sp=span(j),T=estTotals(j),g=T.est-T.bud;return `<tr style="border-left:4px solid ${jc(j)}">
       <td><input type="text" value="${esc(j.no||'')}" data-no="${j.id}" placeholder="${esc(nextNo()||'49-001')}" style="width:80px" aria-label="工事番号"></td>
       <td><a href="#" data-open="${j.id}"><strong>${esc(j.name)}</strong></a>${j.atlas?' <span class="u">ATLUS</span>':''}<span class="u" style="display:block">${j.tasks.length}工種${j.extra?.length?'＋未対応'+j.extra.length:''}</span></td>
       <td class="u">${esc(j.client||'—')}<span style="display:block">${esc(j.place||'')}</span></td>
       <td><select data-st="${j.id}" aria-label="状態">${['見込み','受注','完了'].map(x=>`<option${j.status===x?' selected':''}>${x}</option>`).join('')}</select></td>
       <td class="u">${esc(j.sup||'未定')}</td>
+      <td><input type="date" value="${esc(j.startPlan||'')}" data-sp="${j.id}" aria-label="着手予定" style="width:130px"></td>
       <td class="u">${sp?`${md(sp[0])}〜${md(sp[1])}`:'—'}</td>
       <td class="u">${j.due?md(toN(j.due)):'—'}${j.due&&sp&&sp[1]>toN(j.due)?' <span class="warn">超過</span>':''}</td>
       <td class="num">${yen(T.est)}</td><td class="num">${yen(T.bud)}</td><td class="num ${g<0?'warn':''}">${yen(g)}</td>
@@ -480,6 +488,7 @@ function renderJobs(){
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=e=>{e.preventDefault();V.bud=b.dataset.open;goTab('design')});
     document.querySelectorAll('[data-no]').forEach(i=>i.onchange=()=>{const j=S.jobs.find(x=>x.id===i.dataset.no);j.no=i.value.trim();save();renderJobs()});
     document.querySelectorAll('[data-st]').forEach(sl=>sl.onchange=()=>{const j=S.jobs.find(x=>x.id===sl.dataset.st);j.status=sl.value;save();renderJobs()});
+    document.querySelectorAll('[data-sp]').forEach(i=>i.onchange=()=>{const j=S.jobs.find(x=>x.id===i.dataset.sp);j.startPlan=i.value;if(j.startPlan&&j.tasks.length&&!j.tasks[0].lock){j.tasks[0].start=j.startPlan;packJob(j)}save();renderJobs()});
     document.querySelectorAll('[data-dup]').forEach(b=>b.onclick=()=>{const j=S.jobs.find(x=>x.id===b.dataset.dup);const c=JSON.parse(JSON.stringify(j));c.id=uid();c.no=nextNo();c.name=j.name+'（複製）';c.status='見込み';c.sample=false;c.tasks.forEach(t=>{t.id=uid();delete t.aStart;delete t.aEnd;delete t.aDays;delete t.aQty});S.jobs.push(c);save();V.bud=c.id;goTab('design')});
     document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const j=S.jobs.find(x=>x.id===b.dataset.rm);if(confirm(`案件「${jl(j)}」を削除します。よろしいですか？`)){S.jobs=S.jobs.filter(x=>x.id!==j.id);save();renderJobs()}});
   }
@@ -648,7 +657,8 @@ function renderDesign(){
       <label class="f">状態<select id="fStatus">${['見込み','受注','完了'].map(x=>`<option${j.status===x?' selected':''}>${x}</option>`).join('')}</select></label>
       <label class="f">難易度<select id="fDiff">${GRADES.map(g=>`<option${j.diff===g?' selected':''}>${g}</option>`).join('')}</select></label>
       <label class="f">距離<select id="fDist">${GRADES.map(g=>`<option${j.dist===g?' selected':''}>${g}</option>`).join('')}</select></label>
-      <label class="f">納期<input type="date" id="fDue" value="${esc(j.due||'')}"></label>
+      <label class="f">着手予定（工程の開始見込み）<input type="date" id="fStartPlan" value="${esc(j.startPlan||'')}"></label>
+      <label class="f">完成期限（納期）<input type="date" id="fDue" value="${esc(j.due||'')}"></label>
       <label class="f">主担当の監督<select id="fSup">${opts(S.sups,j.sup,'未定')}</select></label>
       <label class="f">条件タグ<input id="fTags" value="${esc((j.tags||[]).join(','))}" placeholder="急勾配,狭小"></label>
     </div>
@@ -659,9 +669,9 @@ function renderDesign(){
     ${used?`<p class="note warn">歩掛りが未登録の工種が${used}件あります。② 歩掛り で登録するか、工種名をマスタに合わせてください。</p>`:''}
     ${j.atlas?`<p class="note">ATLUS取込済み：直接工事費 ${yen(Object.values(j.atlas.totals).reduce((a,b)=>a+(b||0),0))}円（労材機は ④ 実行予算 で自社と並びます）</p>`:''}
   </div>`;
-  const saveHead=()=>{j.no=$('fNo').value.trim();j.name=$('fName').value.trim()||j.name;j.client=$('fClient').value.trim();j.place=$('fPlace').value.trim();j.status=$('fStatus').value;j.diff=$('fDiff').value;j.dist=$('fDist').value;j.due=$('fDue').value;const os=j.sup;j.sup=$('fSup').value;j.tasks.forEach(t=>{if(!t.crew||t.crew===os)t.crew=j.sup});
+  const saveHead=()=>{j.no=$('fNo').value.trim();j.name=$('fName').value.trim()||j.name;j.client=$('fClient').value.trim();j.place=$('fPlace').value.trim();j.status=$('fStatus').value;j.diff=$('fDiff').value;j.dist=$('fDist').value;j.due=$('fDue').value;const osp=j.startPlan;j.startPlan=$('fStartPlan').value;if(j.startPlan&&j.startPlan!==osp&&j.tasks.length){const t1=j.tasks[0];if(!t1.lock){t1.start=j.startPlan;packJob(j)}}const os=j.sup;j.sup=$('fSup').value;j.tasks.forEach(t=>{if(!t.crew||t.crew===os)t.crew=j.sup});
     j.tags=$('fTags').value.split(/[,、]/).map(x=>x.trim()).filter(Boolean);applyJob(j);save();};
-  ['fNo','fName','fClient','fPlace','fStatus','fDiff','fDist','fDue','fSup','fTags'].forEach(id=>$(id).onchange=()=>{saveHead();render()});
+  ['fNo','fName','fClient','fPlace','fStatus','fDiff','fDist','fStartPlan','fDue','fSup','fTags'].forEach(id=>$(id).onchange=()=>{saveHead();render()});
   $('dDelJob').onclick=()=>{if(confirm(`案件「${jl(j)}」を削除します。工種・見積・実績入力も消えます（② 歩掛りに反映済みの実績は残ります）。よろしいですか？`)){S.jobs=S.jobs.filter(x=>x.id!==j.id);save();render()}};
   document.querySelectorAll('tr[data-k]').forEach(tr=>{const t=j.tasks[+tr.dataset.k];
     tr.querySelector('.k').onchange=e=>{t.kind=e.target.value.trim();applyJob(j);save();render()};
@@ -909,7 +919,7 @@ function drawImport(){
     </tbody></table></div>
     <div class="fg"><label class="f">取込先<select id="iJob"><option value="">新しい案件</option>${S.jobs.map(x=>`<option value="${x.id}"${x.id===IMP.jobId?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
     <label class="f">新しい案件の名称<input id="iName" value="${esc(IMP.newName||'')}"></label>
-    <label class="f">工程の開始日<input type="date" id="iStart" value="${IMP.start}"></label>
+    <label class="f">着手予定（工程の開始見込み）<input type="date" id="iStart" value="${IMP.start}"></label>
     <label class="f">状態<select id="iStat"><option>見込み</option><option>受注</option></select></label></div>
     <p class="note">既存案件を選ぶと、その案件の工種と未対応行を置き換えます（担当監督・班の割り当ては工種名が同じものは引き継ぎます）。</p>`;
   }
@@ -949,7 +959,7 @@ function doImport(status){
     o.qty+=r.qty;o.amount+=r.amount;o.days+=r.days;if(!o.daily)o.daily=r.daily;o.rows.push({code:r.code,name:r.name,qty:r.qty,unit:r.unit});});
   let j=S.jobs.find(x=>x.id===IMP.jobId);
   const oldCrew={}; if(j) j.tasks.forEach(t=>oldCrew[t.kind]=t.crew);
-  if(!j){j={id:uid(),no:nextNo(),name:IMP.newName||'取込案件',client:'',place:'',status,sup:'',color:S.jobs.length%COLORS.length,tags:[],extra:[],tasks:[],diff:'B',dist:'B',due:'',addr:''};S.jobs.push(j)}
+  if(!j){j={id:uid(),no:nextNo(),name:IMP.newName||'取込案件',client:'',place:'',status,startPlan:IMP.start,sup:'',color:S.jobs.length%COLORS.length,tags:[],extra:[],tasks:[],diff:'B',dist:'B',due:'',addr:''};S.jobs.push(j)}
   // 取込順は自社マスタの並び（準備→本体→片付け）に合わせる
   const nu=u=>String(u||'').replace('㎡','m2').replace('㎥','m3').replace('ｍ','m').toLowerCase();
   const resolveQty=(b,o)=>{ // 「1式」で取り込まれた行に設計数量を当てる
@@ -1017,34 +1027,26 @@ function renderEst(){
 }
 
 // ---------- 配置ルール（班×工種ランク、監督ランク、相性表、重み） ----------
+const POLICIES=[['due','納期を守る','納期に間に合わせることを最優先。空いている監督なら誰でも'],['cont','主担当で続ける','案件の主担当の監督にまとめる（多少遅れても）'],['level','人を平らに使う','監督ごとの忙しさを均す。遠い現場のはしごも避ける']];
+const POLICY_W={due:{due:10,early:2,dist:1,level:1,cont:1},cont:{due:3,early:1,dist:1,level:0.5,cont:6},level:{due:3,early:1,dist:3,level:4,cont:1.5}};
 function renderRules(){
-  const kinds=S.bugakari.map(b=>b.kind).filter(k=>k&&!['準備工','片付け'].includes(k));
-  const sel=(v,list,attrs)=>`<select ${attrs}>${list.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}</select>`;
   $('main').innerHTML=`<div class="mst wide">
-    <h3 style="margin:4px 0">監督×工種のランク（松竹梅）</h3>
-    <p class="note">監督が自分の受け持つ人員でその工種をやるときの得意不得意。松＝難しい現場を任せられる、梅＝経験が浅い。未設定は竹。工種ごとに持ちます（法枠は松でも植生は竹、があり得るため）。</p>
-    <div class="ttw"><table class="tt" style="min-width:700px"><thead><tr><th>監督</th>${kinds.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>
-    ${S.sups.map(c=>`<tr><td>${esc(c)}</td>${kinds.map(k=>`<td>${sel(crewRank(c,k),RANKS,`data-cr="${esc(c)}" data-k="${esc(k)}" aria-label="${esc(c)} ${esc(k)}"`)}</td>`).join('')}</tr>`).join('')}
+    <h3 style="margin:4px 0">監督が担当できる現場の難易度</h3>
+    <p class="note">チェックを外した難易度の現場は、その監督に自動配置しません（手で割り当てるのは自由）。難易度は①設計書で案件ごとに A（難）・B・C（易）。これだけが配置の制約で、日数の係数などはありません。</p>
+    <div class="ttw"><table class="tt" style="min-width:420px"><thead><tr><th>監督</th><th>難易度 A（難）</th><th>難易度 B</th><th>難易度 C（易）</th><th>いま受け持っている現場</th></tr></thead><tbody>
+    ${S.sups.map(p=>{const n=active().filter(j=>j.tasks.some(t=>(t.crew||j.sup)===p)).length; return `<tr><td><strong>${esc(p)}</strong></td>${GRADES.map(g=>`<td><label class="chk"><input type="checkbox" data-sd="${esc(p)}" data-g="${g}"${canDo(p,g)?' checked':''}>担当できる</label></td>`).join('')}<td class="u">${n}件</td></tr>`}).join('')}
     </tbody></table></div>
-    <h3 style="margin:16px 0 4px">相性表（ランク × 現場難易度）</h3>
-    <p class="note">「禁止」はその組合せに配置しない。歩掛係数は日進量に掛ける（0.8＝標準より2割遅い＝日数が1.25倍）。「もったいない」は松を易しい現場に使うときの減点に使う印。係数は単位が「日」の工種（準備工・片付けなど）には掛かりません。</p>
-    <div class="ttw"><table class="tt" style="min-width:600px"><thead><tr><th>ランク＼現場</th>${GRADES.map(g=>`<th>難易度 ${g}${g==='A'?'（難）':g==='C'?'（易）':''}</th>`).join('')}</tr></thead><tbody>
-    ${RANKS.map(r=>`<tr><td>${r}</td>${GRADES.map(g=>{const x=rule(r,g);return `<td>${sel(x.use,['推奨','可','禁止'],`data-ru="${r}" data-g="${g}"`)} 係数 <input type="number" step="0.05" min="0.1" max="1.5" value="${x.k}" data-rk="${r}" data-g="${g}" style="width:70px" aria-label="歩掛係数"> <label class="chk"><input type="checkbox" data-rw="${r}" data-g="${g}"${x.waste?' checked':''}>もったいない</label></td>`}).join('')}</tr>`).join('')}
-    </tbody></table></div>
-    <h3 style="margin:16px 0 4px">最適化の重み</h3>
-    <p class="note">配置は納期の近い案件から順に、禁止でない監督のうち評点が最も低い監督・日程を選びます。守る制約は「総人員（日ごとの人数合計）」と「監督の同時現場数」。評点＝納期遅れ日数×［納期］＋完了までの日数÷10×［早さ］＋遠い現場の連続×［距離］＋松を易しい現場に使う×［もったいない］＋その監督の稼働日数÷10×［平準化］。推奨の組合せと主担当の監督はわずかに優先。</p>
-    <div class="fg">${[['due','納期（遅れ1日あたり）'],['early','早さ（完了が10日遅れるごと）'],['dist','距離（遠い現場の連続）'],['waste','もったいない'],['level','平準化（忙しい監督を避ける）']].map(([k,l])=>`<label class="f">${l}<input type="number" min="0" step="1" data-w="${k}" value="${S.weights[k]}"></label>`).join('')}</div>
-    <div class="bar" style="margin-top:10px"><button class="btn primary save" id="rSave">💾 保存して工程・予算に反映</button><button class="btn" id="rOpt">保存して配置を最適化</button><span class="u">ランク・係数・重みを直したら押す。</span></div>
+    <h3 style="margin:16px 0 4px">配置の方針（最適化のとき何を優先するか）</h3>
+    <div class="fg">${POLICIES.map(([k,l,d])=>`<label class="chk" style="align-items:flex-start;max-width:320px"><input type="radio" name="pol" value="${k}"${(S.policy||'due')===k?' checked':''}><span><strong>${l}</strong><span class="u" style="display:block">${d}</span></span></label>`).join('')}</div>
+    <p class="note">共通の制約：総人員（日ごとの人数合計が ${S.staff||20} 人以内）、監督1人の同時現場 ${S.supCap} 件まで、案件の着手予定日より前には始めない、工種は上から順。数字は「データ・設定」で。</p>
+    <div class="bar" style="margin-top:10px"><button class="btn primary save" id="rSave">💾 保存</button><button class="btn" id="rOpt">保存して配置を最適化</button></div>
     <p class="note" id="rMsg"></p></div>`;
   const read=()=>{
-    document.querySelectorAll('[data-cr]').forEach(s=>{(S.crewRank[s.dataset.cr]||(S.crewRank[s.dataset.cr]={}))[s.dataset.k]=s.value});
-    document.querySelectorAll('[data-ru]').forEach(s=>{S.rules[s.dataset.ru][s.dataset.g].use=s.value});
-    document.querySelectorAll('[data-rk]').forEach(s=>{S.rules[s.dataset.rk][s.dataset.g].k=parseFloat(s.value)||1});
-    document.querySelectorAll('[data-rw]').forEach(s=>{S.rules[s.dataset.rw][s.dataset.g].waste=s.checked?1:0});
-    document.querySelectorAll('[data-w]').forEach(s=>S.weights[s.dataset.w]=parseFloat(s.value)||0);
+    S.supDiff=S.supDiff||{}; document.querySelectorAll('[data-sd]').forEach(c=>{(S.supDiff[c.dataset.sd]||(S.supDiff[c.dataset.sd]={}))[c.dataset.g]=c.checked});
+    const pol=document.querySelector('input[name="pol"]:checked'); S.policy=pol?pol.value:'due'; S.weights=Object.assign({},POLICY_W[S.policy]);
   };
-  document.querySelectorAll('.mst select,.mst input').forEach(i=>i.addEventListener('change',()=>{const b=$('rSave'); b.classList.add('dirty'); b.textContent='⚠ 未保存の変更あり → 保存して工程・予算に反映'}));
-  $('rSave').onclick=()=>{read();applyAll();save();renderRules();$('rMsg').textContent='保存しました。'};
+  document.querySelectorAll('.mst input').forEach(i=>i.addEventListener('change',()=>{const b=$('rSave'); b.classList.add('dirty'); b.textContent='⚠ 未保存の変更あり → 保存'}));
+  $('rSave').onclick=()=>{read();save();renderRules();$('rMsg').textContent='保存しました。'};
   $('rOpt').onclick=()=>{read();save();optimize()};
 }
 
@@ -1052,7 +1054,7 @@ function renderRules(){
 // 納期順に案件を取り、工種ごとに「禁止でない班」の中から評点最小の班と最早開始日を選ぶ。固定（lock）の工種は動かさない。
 function optimize(){
   const jobs=active().slice().sort((a,b)=>(a.due?toN(a.due):1e9)-(b.due?toN(b.due):1e9)||((span(a)?.[0]??1e9)-(span(b)?.[0]??1e9)));
-  const t0=today(); const W=S.weights; const STAFF=S.staff||20;
+  const t0=today(); const W=Object.assign({},POLICY_W[S.policy||'due'],S.weights&&S.policy?{}:{}); const STAFF=S.staff||20;
   // 監督ごとの日別現場集合と、全体の日別人数（固定分から始める）
   const busy={}; S.sups.forEach(c=>busy[c]={}); const used={};
   const occupy=(c,s,e,job,men)=>{for(let n=s;n<=e;n++){ if(isHol(n)) continue; (busy[c][n]||(busy[c][n]=new Set())).add(job.id); used[n]=(used[n]||0)+men; }};
@@ -1061,28 +1063,28 @@ function optimize(){
   const loadOf=c=>Object.keys(busy[c]).length;
   const log=[];
   jobs.forEach(j=>{
-    let prevEnd=null, prevCrewEnd={};
+    let prevEnd=null, prevCrewEnd={}, prevCrew=null;
     j.tasks.forEach(t=>{
-      if(t.lock){if(t.end)prevEnd=toN(t.end);return}
+      if(t.lock){if(t.end)prevEnd=toN(t.end);if(t.crew)prevCrew=t.crew;return}
       const q=parseFloat(t.qty)||0, b=bk(t.kind), st=stats(b,j.tags), men=menOf(t);
-      const earliest=nextWork(Math.max(prevEnd!==null?prevEnd+1:(t.start?toN(t.start):t0), t0));
+      const planS=j.startPlan?toN(j.startPlan):null;
+      const earliest=nextWork(Math.max(prevEnd!==null?prevEnd+1:(planS??(t.start?toN(t.start):t0)), t0, planS??0));
       let best=null,bs=Infinity;
       S.sups.forEach(c=>{
-        const r=crewRank(c,t.kind), ru=rule(r,j.diff||'B'); if(ru.use==='禁止'&&b&&b.unit!=='日') return;
-        const days=(b&&st&&st.rate>0&&q>0)?Math.max(1,Math.ceil(q/(st.rate*(b.unit==='日'?1:(ru.k||1))*menRatio(t)))):(t.start&&t.end?Math.max(1,wdays(toN(t.start),toN(t.end))):1);
+        if(!canDo(c,j.diff||'B')) return;
+        const days=(b&&st&&st.rate>0&&q>0)?Math.max(1,Math.ceil(q/(st.rate*menRatio(t)))):(t.start&&t.end?Math.max(1,wdays(toN(t.start),toN(t.end))):1);
         let s=earliest,k=0; while(!free(c,s,endOf(s,days),j,men)&&k++<400) s=nextWork(s+1);
         const e=endOf(s,days);
         const late=j.due?Math.max(0,e-toN(j.due)):0;
         const pe=prevCrewEnd[c]??Object.keys(busy[c]).map(Number).filter(n=>n<s).sort((a,b)=>b-a)[0];
         const other=pe!==undefined&&busy[c][pe]&&[...busy[c][pe]].some(x=>x!==j.id);
         const far=other&&s-pe<=3?({A:2,B:1,C:0}[j.dist||'B']):0;
-        const waste=ru.waste?1:0;
-        const sc=late*W.due+(e-earliest)/10*W.early+far*W.dist+waste*W.waste+loadOf(c)/10*W.level+(ru.use==='推奨'?0:0.5)+(c===j.sup?0:0.3);
-        if(sc<bs){bs=sc;best={c,s,e,days,r,ru,late}}
+        const sc=late*W.due+(e-earliest)/10*W.early+far*W.dist+loadOf(c)/10*W.level+((c===j.sup||c===prevCrew)?0:(W.cont??1)); // 同じ案件は同じ監督で続ける方を好む
+        if(sc<bs){bs=sc;best={c,s,e,days,late}}
       });
-      if(!best){log.push(`${j.name}／${t.kind}：配置できる監督がいません（禁止ばかり）`);return}
-      t.crew=best.c;t.start=toS(best.s);t.end=toS(best.e);occupy(best.c,best.s,best.e,j,men);prevCrewEnd[best.c]=best.e;prevEnd=best.e;
-      if(best.late)log.push(`${j.name}／${t.kind}：納期を${best.late}日超過（${best.c}・${best.r}）`);
+      if(!best){log.push(`${j.name}／${t.kind}：この難易度（${j.diff||'B'}）を担当できる監督がいません`);return}
+      t.crew=best.c;t.start=toS(best.s);t.end=toS(best.e);occupy(best.c,best.s,best.e,j,men);prevCrewEnd[best.c]=best.e;prevEnd=best.e;prevCrew=best.c;
+      if(best.late)log.push(`${j.name}／${t.kind}：納期を${best.late}日超過（${best.c}）`);
     });
     // 主担当＝工種を最も多く受け持つ監督
     const cnt={}; j.tasks.forEach(t=>{if(t.crew)cnt[t.crew]=(cnt[t.crew]||0)+1});
@@ -1090,7 +1092,7 @@ function optimize(){
   });
   save(); goTab('board');
   const el=$('alerts'); el.className=log.length?'':'ok';
-  el.innerHTML=`<strong>配置を最適化しました</strong>（納期順・禁止を除外・総人員${STAFF}人と監督の同時${S.supCap}現場を守る・評点最小）${log.length?`<ul>${log.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'　納期超過・配置不能はありません。'}<div class="note">元に戻すには「データ・設定」から前の文字列を読み込んでください。固定にチェックした工種は動かしていません。</div>`;
+  el.innerHTML=`<strong>配置を最適化しました</strong>（方針：${(POLICIES.find(p=>p[0]===(S.policy||'due'))||[])[1]}／総人員${STAFF}人・監督の同時${S.supCap}現場・着手予定日を守る）${log.length?`<ul>${log.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'　納期超過・配置不能はありません。'}<div class="note">元に戻すには「データ・設定」から前の文字列を読み込んでください。固定にチェックした工種は動かしていません。</div>`;
 }
 
 // ---------- 画面内ヘルプ（各ページの説明とボタンの意味）----------
@@ -1098,11 +1100,11 @@ const HELP={
  design:{t:'① 設計書：入口。案件の情報と「工種×数量」を入れる',p:'ここに入れた工種・数量が、②歩掛り→③見積→④実行予算→⑤計画工程→⑥実施工程へそのまま流れます。工種名はマスタ（②）にある名前に合わせると歩掛が効きます。',
   b:[['設計書・ATLUSのExcelを取り込む','ATLUS NEXTの印刷様式、扇屋の見積書Excel、設計書の数量表を読みます。ATLUS/見積書なら工事名・番号・工種・労材機まで入ります。行ごとに自社工種への対応を決めます（自動推定あり、一度決めれば次回から自動）'],
      ['手入力で案件を追加','Excelがないとき。工事名と工種・数量を手で入れる'],
-     ['工種を追加','この案件に工種を1行足す。工種名はマスタから選ぶと歩掛が効く'],['Excel出力','見積書・実行予算書・工程表を1冊のExcelに、全体の人員計画表・全案件工程表、CSV'],
+     ['工種を追加','この案件に工種を1行足す。工種名はマスタから選ぶと歩掛が効く'],['Excel出力','見積書・実行予算書・工程表を1冊のExcelに、全体の人員計画表・全案件工程表、CSV'],['一式全部出力','進行中の全案件の1冊ずつ＋人員計画・全案件工程＋CSVを1つのzipにまとめて出す'],
      ['法面の標準工程を入れる','雛形。準備工→法面整形→ラス張→吹付法枠F300→植生基材吹付→片付け を空の数量で一気に足します（数量を入れるだけにするため）。すでにある工種は重複しません。取込とは無関係'],
      ['日付・班の詳細編集','工種ごとの開始日・終了日・人数・担当監督・固定を直接編集する画面を開く'],
      ['この案件を削除','案件ごと消す（戻せない）'],
-     ['→ ② 歩掛りを確認','次の画面へ']]},
+     ['着手予定（工程の開始見込み）','この日より前には工程を置かない。入れると最初の工種がこの日から始まり、以降が詰め直される'],['→ ② 歩掛りを確認','次の画面へ']]},
  mst:{t:'② 歩掛り：工種ごとの「1班1日の施工量」と単価',p:'既定ではこの案件で使う工種だけ表示。歩掛りの初期値はR7土木工事標準積算基準書（共通編）の日当り施工量で、出所欄にページ記号を入れています。実績を記録すると「採用値」が実績の中央値に変わり、工程と実行予算に効きます。「官 日当り」はATLUSの代価表の人工を1班の人数で割った参考値。',
   b:[['全工種（マスタ全体）を表示','この案件にない工種も含めて全部出す。新しい工種を足すときはこちら'],['工種を追加','マスタに新しい工種を作る（名前・単位・歩掛・標準人数・機械日額・単価・出所を入れる）'],['標準人数','歩掛りが前提にしている作業員数。現場の人数がこれと違えば日数が人数比で変わる'],['実績','その工種の実績点の一覧（消せる）'],['保存して工程・予算に反映','表の変更を保存し、全案件の日数・予算を計算し直す。数字を直すとボタンが赤く点滅する＝まだ反映されていない合図'],['×','その工種をマスタから消す']]},
  est:{t:'③ 見積：発注者に出す金額',p:'数量×見積単価＝直接工事費、＋諸経費率＋法定福利費率、万円未満切上。右側に実行予算と粗利が並びます。ATLUS取込の案件は「官単価」が並ぶので、官の単価で出すか自社の単価で出すかを行ごとに選べます。',
@@ -1115,8 +1117,8 @@ const HELP={
   b:[['歩掛に反映','その工種の実績（出来高と人日）を②の実績点に追加。採用値が中央値に更新される'],['この案件を完了にする','状態を完了にして工程・配置から外す（案件一覧の「完了」に残る）'],['← ⑤ 計画工程','前の画面へ']]},
  jobs:{t:'案件一覧：案件の管理',p:'番号・状態はこの表で直接変えられます。工事番号は「期-連番」（例 49-014）で、空欄なら次の番号を提案します。',
   b:[['進行中／見込み／受注／完了／すべて','絞り込み'],['開く','その案件を選んで①設計書へ'],['編集','日付・班の詳細編集を開く'],['複製','同じ工種構成で新しい案件を作る（見込み・実績なし）'],['削除','案件を消す（戻せない）'],['見本案件を入れる','練習用の5案件を追加'],['案件を追加','手入力で新規']]},
- rule:{t:'配置ルール：監督の得意不得意と、最適化の重み',p:'ランクは監督×工種（法枠は松でも植生は竹、があるため）。相性表で 松×難A＝推奨、梅×難A＝禁止、竹×難A＝可（係数0.8＝日数1.25倍）のように決める。評点の重みを動かすと配置が変わる。',
-  b:[['保存して工程・予算に反映','係数の変更を全案件の日数に反映'],['保存して配置を最適化','保存してそのまま最適化を実行']]}
+ rule:{t:'配置ルール：誰がどの難易度の現場を持てるか、と優先方針',p:'監督ごとに担当できる難易度（A難・B・C易）にチェック。それと方針（納期を守る／主担当で続ける／人を平らに使う）だけ。日数の係数や松竹梅はやめました。日数は歩掛×人数だけで決まります。',
+  b:[['担当できる','外すと、その難易度の案件はその監督に自動配置しない'],['配置の方針','最適化が迷ったとき何を優先するか'],['保存','設定を保存'],['保存して配置を最適化','保存してそのまま最適化を実行']]}
 };
 function renderHelp(){
   const h=HELP[V.tab]; let el=$('help'); if(!el){el=document.createElement('details');el.id='help';el.className='help';$('main').parentNode.insertBefore(el,$('main'));el.addEventListener('toggle',()=>{V.helpOpen=el.open})}
@@ -1149,7 +1151,7 @@ function autoAssign(){
     if(t.crew||!t.start||!t.end) return;
     const a=toN(t.start),b=toN(t.end);
     let best=null,bv=Infinity;
-    S.sups.forEach(c=>{let v=0; if(rule(crewRank(c,t.kind),draft.diff||'B').use==='禁止') return;
+    S.sups.forEach(c=>{let v=0; if(!canDo(c,draft.diff||'B')) return;
       pool().forEach(j=>j.tasks.forEach(u=>{ if(u!==t&&u.crew===c&&u.start&&u.end){const x=Math.max(a,toN(u.start)),y=Math.min(b,toN(u.end)); if(x<=y) v+=y-x+1}}));
       if(v<bv){bv=v;best=c}});
     t.crew=best;
@@ -1182,7 +1184,7 @@ function readForm(){
   draft.status=f.querySelector('#fStatus').value;
   draft.sup=f.querySelector('#fSup').value;
   draft.tags=f.querySelector('#fTags').value.split(/[,、]/).map(s=>s.trim()).filter(Boolean);
-  draft.diff=f.querySelector('#fDiff').value; draft.dist=f.querySelector('#fDist').value; draft.due=f.querySelector('#fDue').value; draft.addr=f.querySelector('#fAddr').value.trim();
+  draft.diff=f.querySelector('#fDiff').value; draft.dist=f.querySelector('#fDist').value; draft.due=f.querySelector('#fDue').value; draft.startPlan=(f.querySelector('#fStartPlan')||{value:''}).value; draft.addr=f.querySelector('#fAddr').value.trim();
   f.querySelectorAll('tr[data-t]').forEach(tr=>{
     const t=draft.tasks.find(x=>x.id===tr.dataset.t); if(!t) return;
     t.kind=tr.querySelector('.k').value.trim(); t.qty=tr.querySelector('.q').value; t.men=tr.querySelector('.m').value?Math.max(1,parseInt(tr.querySelector('.m').value)||1):''; t.start=tr.querySelector('.s').value; t.end=tr.querySelector('.e').value; t.crew=tr.querySelector('.c').value||draft.sup||''; t.lock=tr.querySelector('.lk').checked;
@@ -1205,17 +1207,18 @@ function drawEdit(){
       <label class="f">条件タグ（カンマ区切り）<input id="fTags" value="${esc((draft.tags||[]).join(','))}" placeholder="急勾配,狭小,運搬長"></label>
       <label class="f">現場の難易度<select id="fDiff">${GRADES.map(g=>`<option${draft.diff===g?' selected':''}>${g}</option>`).join('')}</select></label>
       <label class="f">距離（会社から）<select id="fDist">${GRADES.map(g=>`<option${draft.dist===g?' selected':''}>${g}</option>`).join('')}</select></label>
-      <label class="f">納期（完成期限）<input type="date" id="fDue" value="${esc(draft.due||'')}"></label>
+      <label class="f">着手予定（工程の開始見込み）<input type="date" id="fStartPlan" value="${esc(draft.startPlan||'')}"></label>
+      <label class="f">完成期限（納期）<input type="date" id="fDue" value="${esc(draft.due||'')}"></label>
       <label class="f">住所<input id="fAddr" value="${esc(draft.addr||'')}"></label>
     </div>
-    <p class="note">難易度A＝難しい（急勾配・高所・岩・交通規制など）、C＝易しい。距離A＝遠い、C＝近い。配置の最適化はこの3つと班のランクで決めます。</p>
+    <p class="note">難易度A＝難しい（急勾配・高所・岩・交通規制など）、C＝易しい。距離A＝遠い、C＝近い。着手予定日より前には配置しません。</p>
     <div class="ttw"><table class="tt"><thead><tr><th>工種</th><th>数量</th><th></th><th>人数</th><th>開始</th><th>稼働</th><th>終了</th><th>担当監督</th><th>固定</th><th></th></tr></thead><tbody>
     ${draft.tasks.map(t=>`<tr data-t="${t.id}"><td><input type="text" class="k" list="kinds" value="${esc(t.kind)}" aria-label="工種"></td>
       <td><input type="number" step="any" min="0" class="q" value="${esc(t.qty??'')}" aria-label="数量"></td><td class="u">${esc(bk(t.kind)?.unit||'—')}</td>
       <td><input type="number" min="1" step="1" class="m" value="${esc(t.men||'')}" placeholder="${bk(t.kind)?.men||4}" style="width:56px" aria-label="人数"></td>
       <td><input type="date" class="s" value="${esc(t.start)}" aria-label="開始"></td><td class="d">${t.start&&t.end?wdays(toN(t.start),toN(t.end))+'日':''}</td>
       <td><input type="date" class="e" value="${esc(t.end)}" aria-label="終了"${need(t,draft.tags,draft)?' readonly':''}></td>
-      <td><select class="c" aria-label="担当監督">${opts(S.sups,t.crew,'主担当')}</select><span class="u" style="display:block">${t.crew?crewRank(t.crew,t.kind)+(draft.diff?'×'+draft.diff+'＝'+rule(crewRank(t.crew,t.kind),draft.diff).use:''):''}</span></td>
+      <td><select class="c" aria-label="担当監督">${opts(S.sups,t.crew,'主担当')}</select><span class="u" style="display:block">${t.crew&&!canDo(t.crew,draft.diff||'B')?'難易度'+(draft.diff||'B')+'は担当外':''}</span></td>
       <td><input type="checkbox" class="lk"${t.lock?' checked':''} aria-label="最適化で動かさない"></td>
       <td><button type="button" class="x" data-del="${t.id}" aria-label="この工種を削除">×</button></td></tr>`).join('')}
     </tbody></table></div>
@@ -1244,7 +1247,7 @@ function drawEdit(){
     t.kind=tr.querySelector('.k').value.trim(); t.qty=tr.querySelector('.q').value; t.men=tr.querySelector('.m').value?Math.max(1,parseInt(tr.querySelector('.m').value)||1):''; t.start=tr.querySelector('.s').value; t.end=tr.querySelector('.e').value; t.crew=tr.querySelector('.c').value; t.lock=tr.querySelector('.lk').checked;
     draft.diff=$('fDiff').value;
     applyTask(t,draft.tags,draft);
-    tr.querySelector('.c').nextElementSibling.textContent=t.crew?crewRank(t.crew,t.kind)+(draft.diff?'×'+draft.diff+'＝'+rule(crewRank(t.crew,t.kind),draft.diff).use:''):'';
+    tr.querySelector('.c').nextElementSibling.textContent=t.crew&&!canDo(t.crew,draft.diff||'B')?'難易度'+(draft.diff||'B')+'は担当外':'';
     tr.querySelector('.u').textContent=bk(t.kind)?.unit||'—';
     tr.querySelector('.s').value=t.start||'';
     const e=tr.querySelector('.e'); e.value=t.end||''; e.readOnly=!!need(t,draft.tags,draft);
@@ -1295,7 +1298,7 @@ function openData(){
   };
   f.querySelector('#dClose').onclick=()=>$('dlg').close();
   f.querySelector('#dReset').onclick=()=>{ if(confirm('案件をすべて削除します（歩掛りマスタ・班・監督・配置ルール・ATLUS対応表は残ります）。戻せません。')){S.jobs=[];save();$('dlg').close();render()} };
-  f.querySelector('#dImport').onclick=()=>{ try{const x=JSON.parse(f.querySelector('#dJson').value); if(!Array.isArray(x.jobs)) throw 0; S=x; if(!S.bugakari) S.bugakari=sampleMaster(); if(!S.holiday) S.holiday='sat-sun'; migrate(); applyAll(); save(); $('dlg').close(); render()}catch(e){alert('読み込めませんでした。コピーした文字列が途中で切れていないか確認してください。')} };
+  f.querySelector('#dImport').onclick=()=>{ try{const x=JSON.parse(f.querySelector('#dJson').value); if(!Array.isArray(x.jobs)) throw 0; S=x; if(!S.bugakari) S.bugakari=sampleMaster(); if(!S.holiday) S.holiday='sun'; migrate(); applyAll(); save(); $('dlg').close(); render()}catch(e){alert('読み込めませんでした。コピーした文字列が途中で切れていないか確認してください。')} };
   f.querySelector('#df').onsubmit=()=>{
     const sp=f.querySelector('#dSups').value.split(/[,、]/).map(s=>s.trim()).filter(Boolean);
     rename(S.sups,sp,'sup'); rename(S.sups,sp,'crew');
@@ -1564,7 +1567,9 @@ function wsEstimate2(j,T){
   return g.done([1,5.2,4.4,4.2,9.4,13.4,13,13,13,7.6,4,12,4.6,4,10,13.2,9.4,3.2,1],{landscape:true,scale:90});
 }
 
-async function saveBook(wb,name){
+async function saveBook(wb,name){ const out=await buildBook(wb); dlBlob(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),name); }
+function dlBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000); }
+async function buildBook(wb){
   let out=XLSX.write(wb,{type:'array',bookType:'xlsx',cellStyles:true});
   // SheetJSは印刷設定を書かないので、xlsx（zip）を開いて pageSetup（A4・向き・幅1ページ）を差し込む
   if(typeof JSZip!=='undefined'){try{
@@ -1577,16 +1582,28 @@ async function saveBook(wb,name){
       zip.file(f,x);}
     out=await zip.generateAsync({type:'arraybuffer',compression:'DEFLATE'});
   }catch(e){console.warn('pageSetup skipped',e)}}
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+  return out;
 }
-function exportJobBook(j){
-  const T=estTotals(j), wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,wsCover2(j,T),'表紙');
-  XLSX.utils.book_append_sheet(wb,wsEstimate2(j,T),'本工事費表');
-  XLSX.utils.book_append_sheet(wb,wsBudget(j,T),'実行予算書');
-  XLSX.utils.book_append_sheet(wb,wsGantt(j),'工程表');
-  saveBook(wb,fnameSafe(`${j.no?j.no+'_':''}${j.name}_見積・予算・工程`)+'.xlsx');
+function jobBook(j){const T=estTotals(j), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,wsCover2(j,T),'表紙'); XLSX.utils.book_append_sheet(wb,wsEstimate2(j,T),'本工事費表');
+  XLSX.utils.book_append_sheet(wb,wsBudget(j,T),'実行予算書'); XLSX.utils.book_append_sheet(wb,wsGantt(j),'工程表'); return wb;}
+function allBook(weeks){const jobs=active(),d0=monday(today()),d1=d0+weeks*7-1, wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,wsStaffPlan(jobs,d0,d1),'人員計画表'); XLSX.utils.book_append_sheet(wb,wsAllGantt(jobs,d0,d1),'全案件工程表');
+  const csv=csvRows(S.jobs); XLSX.utils.book_append_sheet(wb,mkSheet(csv.map((r,i)=>r.map(v=>i===0?C(v,XS.th):(typeof v==='number'?D(v):C(v,XS.td)))),{cols:csv[0].map(()=>12)}),'一覧（CSV相当）'); return wb;}
+// 一式全部：進行中の全案件の1冊ずつ＋全体＋CSV を zip でまとめて1回のダウンロードに
+async function exportEverything(weeks,msg){
+  if(typeof JSZip==='undefined'){alert('zipライブラリが読み込めていません。通信状態を確認してください。');return}
+  const zip=new JSZip(), jobs=S.jobs.filter(j=>j.status!=='完了'), day=toS(today());
+  const say=t=>{if(msg)msg.textContent=t};
+  let i=0; for(const j of jobs){ say(`案件 ${++i}/${jobs.length}：${jl(j)}`); zip.file(`案件別/${fnameSafe((j.no?j.no+'_':'')+j.name)}_見積・予算・工程.xlsx`,await buildBook(jobBook(j))); }
+  say('人員計画・全案件工程…'); zip.file(`扇屋_人員計画・全案件工程_${day}.xlsx`,await buildBook(allBook(weeks)));
+  const csv=csvRows(S.jobs), esc1=v=>{const t=String(v??'');return /[",\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+  zip.file(`扇屋_案件工種一覧_${day}.csv`,'\uFEFF'+csv.map(r=>r.map(esc1).join(',')).join('\r\n'));
+  zip.file('読んでください.txt',`見積・予算・工程ボード 一式出力 ${day}\n\n案件別/…_見積・予算・工程.xlsx：表紙・本工事費表（扇屋書式）・実行予算書・工程表（進行中の案件 ${jobs.length}件）\n扇屋_人員計画・全案件工程_${day}.xlsx：日×監督の人数、全案件の帯、一覧\n扇屋_案件工種一覧_${day}.csv：工種ごと1行（AnyONE・会計・集計用）\n\n総人員 ${S.staff||20}人、人日単価 ${yen(S.manDay||28000)}円で計算。`);
+  say('zipにまとめています…'); const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+  dlBlob(blob,`扇屋_一式_${day}.zip`); say(`出しました：案件 ${jobs.length}件＋全体＋CSV`);
 }
+function exportJobBook(j){ saveBook(jobBook(j),fnameSafe(`${j.no?j.no+'_':''}${j.name}_見積・予算・工程`)+'.xlsx'); }
 function exportOne(kind){
   const j=curJob(); if(!j&&kind!=='staff'&&kind!=='csv') return;
   const wb=XLSX.utils.book_new(); let name='';
@@ -1608,7 +1625,8 @@ function exportAllBook(weeks){
 function openExport(){
   const j=curJob();
   $('dlg').innerHTML=`<form method="dialog"><div class="dh">Excel・CSVに出す</div><div class="db">
-    <h3 style="margin:4px 0">この案件を1冊に</h3>
+    <div class="bar" style="background:#f6f8fb;padding:10px;border-radius:8px"><button type="button" class="btn primary save" id="xEvery">📦 一式全部出力（zip）</button><label class="f">期間<select id="xWeeksAll"><option value="8" selected>8週</option><option value="13">13週</option><option value="26">半年</option></select></label><span class="u">進行中の全案件の1冊ずつ＋人員計画・全案件工程＋CSVを1つのzipに。</span></div>
+    <h3 style="margin:14px 0 4px">この案件を1冊に</h3>
     <p class="note">${j?esc(jl(j)):'（案件がありません）'}：表紙／御見積書（本工事費表・経費）／実行予算書（人日・機械・材料、官積算との比較）／工程表（計画・実績・日別人数）。游ゴシック、A4。</p>
     <div class="bar"><button type="button" class="btn primary" id="xJob"${j?'':' disabled'}>この案件をExcelに</button></div>
     <h3 style="margin:14px 0 4px">全体</h3>
@@ -1622,6 +1640,7 @@ function openExport(){
   const run=f=>{try{f()}catch(e){console.error(e);$('xMsg').textContent='出力に失敗しました：'+e.message}};
   if(j) $('xJob').onclick=()=>run(()=>exportJobBook(j));
   $('xAll').onclick=()=>run(()=>exportAllBook(+$('xWeeks').value||8));
+  $('xEvery').onclick=()=>run(()=>exportEverything(+$('xWeeksAll').value||8,$('xMsg')));
   $('xCsv').onclick=()=>run(()=>downloadCsv(csvRows(S.jobs),`扇屋_案件工種一覧_${toS(today())}.csv`));
   $('dlg').showModal();
 }
@@ -1636,7 +1655,7 @@ $('zWeek').onclick=()=>{V.zoom='week';$('zWeek').setAttribute('aria-pressed','tr
 $('pros').onchange=e=>{V.pros=e.target.checked;render()};
 $('add').onclick=()=>openEdit(null);
 $('data').onclick=openData;
-$('xls').onclick=openExport; $('bdXls').onclick=()=>exportOne('staff');
+$('xls').onclick=openExport; $('bdXls').onclick=()=>exportOne('staff'); $('xEveryTop').onclick=()=>{const el=$('alerts'); el.style.display='';el.className='ok'; el.textContent='一式を作っています…'; exportEverything(8,el).catch(e=>{el.className='';el.textContent='出力に失敗：'+e.message})};
 const TABS={design:'tDesign',mst:'tMst',est:'tEst',bud:'tBud',board:'tBoard',act:'tAct',jobs:'tJobs',rule:'tRule'};
 $('gJob').onchange=e=>{V.bud=e.target.value;render()};
 $('opt').onclick=()=>{if(confirm('受注・見込み案件の班・日程を納期順に組み直します（固定にチェックした工種は動かしません）。よろしいですか？'))optimize()};
